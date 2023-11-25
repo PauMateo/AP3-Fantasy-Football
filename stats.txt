@@ -1,0 +1,23 @@
+GREEDY:
+easy-1.txt->  PUNTS: 126;   PREU: 7178000
+easy-2.txt->  PUNTS: 126;   PREU: 7178000
+easy-3.txt->  PUNTS: 126;   PREU: 7188000
+easy-4.txt->  PUNTS: 126;   PREU: 7178000
+easy-5.txt->  PUNTS: 126;   PREU: 7178000
+easy-6.txt->  PUNTS: 126;   PREU: 6518000
+easy-7.txt->  PUNTS: 126;   PREU: 7188000
+hard-1.txt->  PUNTS: 1158;   PREU: 100000000
+hard-2.txt->  PUNTS: 1184;   PREU: 101000000
+hard-3.txt->  PUNTS: 1219;   PREU: 101000000
+hard-4.txt->  PUNTS: 1165;   PREU: 101000000
+hard-5.txt->  PUNTS: 1182;   PREU: 101000000
+hard-6.txt->  PUNTS: 1137;   PREU: 100000000
+hard-7.txt->  PUNTS: 1181;   PREU: 101000000
+med-1.txt->  PUNTS: 882;   PREU: 75000000
+med-2.txt->  PUNTS: 938;   PREU: 74000000
+med-3.txt->  PUNTS: 940;   PREU: 74848000
+med-4.txt->  PUNTS: 919;   PREU: 74000000
+med-5.txt->  PUNTS: 943;   PREU: 74848000
+med-6.txt->  PUNTS: 861;   PREU: 75000000
+med-7.txt->  PUNTS: 935;   PREU: 74000000
+
