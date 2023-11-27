@@ -30,9 +30,9 @@ class Equip {
         int punts;
         int preu;
 
-        Equip():
-            por(""), def(vector<string>()), mig(vector<string>()),
-            dav(vector<string>()), punts(0), preu(0){}
+        Equip(int Ndef, int Nmig, int Ndav):
+            por(""), def(vector<string>(Ndef)), mig(vector<string>(Nmig)),
+            dav(vector<string>(Ndav)), punts(0), preu(0){}
 /*
         Equip(const Jugador& por, 
               const vector<Jugador>& def,
@@ -82,7 +82,7 @@ class Tactic {
 
 
 vector<Jugador> listpor, listdef, listmig, listdav;
-Equip E_millor = Equip();
+Equip E_millor = Equip(0, 0, 0);
 int maxPuntspor=0, maxPuntsdef=0, maxPuntsmig=0, maxPuntsdav=0;
 
 bool ordre1(Jugador j1, Jugador j2){
@@ -184,11 +184,12 @@ void llegir_jugadors(ifstream& dades_jugadors,
 
 void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
             string fitxer_sortida){
-    if( T<0 or (Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E.punts)) return;
+    if( T<0 or (E.punts + Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E_millor.punts)) return;
     
     
-    if (Npor+Ndef+Nmig+Ndav == 0){
+    if (Npor+Ndef+Nmig+Ndav == 0 and E.punts > E_millor.punts){
         E_millor = E;
+        cout << E_millor.punts;
         return write_sol(fitxer_sortida, E);
     }
 
@@ -196,36 +197,53 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     if(Npor > 0){
         for(Jugador j : listpor){
             if(j.preu <= J and j.preu <= T){
-                E.afegir_jugador(j);
+                E.por = j.nom;
+                E.punts += j.punts;
+                E.preu += j.preu;
                 exh_search_rec(E, Npor-1, Ndef, Nmig, Ndav, T-j.preu, J, fitxer_sortida);
+                E.punts -= j.punts;
+                E.preu -= j.preu;
     }}}
 
     if(Ndef > 0){
         for(Jugador j : listdef){
             if(j.preu <= J and j.preu <= T){
-                E.afegir_jugador(j);
+                E.def[Ndef-1] = j.nom;
+                E.punts += j.punts;
+                E.preu += j.preu;
                 exh_search_rec(E, Npor, Ndef-1, Nmig, Ndav, T-j.preu, J, fitxer_sortida);
+                E.punts -= j.punts;
+                E.preu -= j.preu;
     }}}
 
     if(Nmig > 0){
         for(Jugador j : listmig){
             if(j.preu <= J and j.preu <= T){
-                E.afegir_jugador(j);
+                E.mig[Nmig-1] = j.nom;
+                E.punts += j.punts;
+                E.preu += j.preu;
                 exh_search_rec(E, Npor, Ndef, Nmig-1, Ndav, T-j.preu, J, fitxer_sortida);
+                E.punts -= j.punts;
+                E.preu -= j.preu;
     }}}
 
     if(Ndav > 0){
         for(Jugador j : listdav){
             if(j.preu <= J and j.preu <= T){
-                E.afegir_jugador(j);
+                E.dav[Ndav-1] = j.nom;
+                E.punts += j.punts;
+                E.preu += j.preu;
                 exh_search_rec(E, Npor, Ndef, Nmig, Ndav-1, T-j.preu, J, fitxer_sortida);
+                E.punts -= j.punts;
+                E.preu -= j.preu;
     }}}
 }
 
 
 void exh_search(int Ndef, int Nmig, int Ndav, int T, int J,
             string fitxer_sortida){
-    Equip E = Equip();
+    Equip E = Equip(Ndef, Nmig, Ndav);
+    E_millor = Equip(Ndef, Nmig, Ndav);
     return exh_search_rec(E, 0, Ndef, Nmig, Ndav, T, J, fitxer_sortida);
 }
 
