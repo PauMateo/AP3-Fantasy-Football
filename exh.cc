@@ -201,24 +201,23 @@ void llegir_jugadors(ifstream& dades_jugadors,
     std::sort(listdef.begin(), listdef.end(), ordre1);
     std::sort(listmig.begin(), listmig.end(), ordre1);
     std::sort(listdav.begin(), listdav.end(), ordre1);
+
 }
 
 
 void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
             string fitxer_sortida, auto start){
-    if( T<0 or (E.punts + Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E_millor.punts)) return;
-    
-    
-    if (Npor+Ndef+Nmig+Ndav == 0 and E.punts > E_millor.punts){
+    if (Npor + Ndef + Nmig + Ndav == 0 and E.punts > E_millor.punts){
         E_millor = E;
-        cout << E_millor.punts;
         return write_sol(fitxer_sortida, E, start);
     }
+
+    if( T<0 or (E.punts + Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E_millor.punts)) return;
 
 
     if(Npor > 0){
         for(Jugador j : listpor){
-            if(j.preu <= J and j.preu <= T){
+            if(j.preu <= T){
                 E.por = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
@@ -230,7 +229,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     if(Ndef > 0){
         for(uint i=0; i<listdef.size(); i++){
             Jugador j = listdef[i];
-            if(j.preu <= J and j.preu <= T and not Udef[i]){
+            if(j.preu <= T and not Udef[i]){
                 E.def[Ndef-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
@@ -244,7 +243,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     if(Nmig > 0){
         for(uint i=0; i<listmig.size(); i++){
             Jugador j = listmig[i];
-            if(j.preu <= J and j.preu <= T and not Umig[i]){
+            if(j.preu <= T and not Umig[i]){
                 E.mig[Nmig-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
@@ -258,7 +257,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     if(Ndav > 0){
         for(uint i=0; i<listdav.size(); i++){
             Jugador j = listdav[i];
-            if(j.preu <= J and j.preu <= T and not Udav[i]){
+            if(j.preu <= T and not Udav[i]){
                 E.dav[Ndav-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
