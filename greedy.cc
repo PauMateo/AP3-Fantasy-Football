@@ -73,16 +73,6 @@ class Equip {
 };
 
 
-/*
-class Tactic {
-    public:
-        uint goal;
-        uint def;
-        uint mid;
-        uint str;
-        Tactic() {}
-        Tactic(uint g, uint d, uint m, uint s):goal(g), def(d), mid(m), str(s) {}
-}; */
 
 void write_sol(ofstream& fs, Equip E, auto start){
     //time!
@@ -96,7 +86,7 @@ void write_sol(ofstream& fs, Equip E, auto start){
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
 
-    fs <<setprecision( 1 )<< duration.count() / 1000 << endl;
+    fs <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
 
     fs << "POR: " << E.por << endl;
     
@@ -136,10 +126,7 @@ bool ordre2(Jugador j1, Jugador j2){
 
 
 void llegir_jugadors(ifstream& dades_jugadors,
-                     vector<Jugador>& listpor,
-                     vector<Jugador>& listdef,
-                     vector<Jugador>& listmig,
-                     vector<Jugador>& listdav,
+                     vector<Jugador>& jugadors,
                      int J){
     string nom, pos, club, aux2;
     int preu, punts;
@@ -158,33 +145,38 @@ void llegir_jugadors(ifstream& dades_jugadors,
         if(nom=="") break;
 
         if(preu <= J){
-            if(pos=="por") listpor.push_back(j);
-            if(pos=="def") listdef.push_back(j);
-            if(pos=="mig") listmig.push_back(j);
-            if(pos=="dav") listdav.push_back(j);
+            jugadors.push_back(j);
         }
-        //cout<<nom<<";"<<pos<<";"<<preu<<";"<<club<<";"<<punts<<endl;
     }
 }
 
 
 void greedy(int Ndef, int Nmig, int Ndav, int T, int J,
             ifstream& dades_jugadors, ofstream& fitxer_sortida, auto start){
-    
+
 
     Equip E = Equip();
 
-    vector<Jugador> listpor, listdef, listmig, listdav;
-    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav);
-    
-    sort(listpor.begin(), listpor.end(), ordre2);
-    sort(listdef.begin(), listdef.end(), ordre2);
-    sort(listmig.begin(), listmig.end(), ordre2);
-    sort(listdav.begin(), listdav.end(), ordre2);
+    vector<Jugador> jugadors;
+    llegir_jugadors(dades_jugadors, jugadors, J);
+    sort(jugadors.begin(), jugadors.end(), ordre2);
 
     int preu_restant = T;
-    bool por_trobat = false;
+    int Npor = 1;
 
+    for(uint i=0; i<jugadors.size() and Npor + Ndef + Nmig + Ndav != 0; i++){
+        //sempre tindrem que jugadors[i].preu <= J
+        Jugador j = jugadors[i];
+        if(j.preu <= preu_restant){
+            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); Npor -= 1;}
+            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); Ndef -= 1;}
+            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); Nmig -= 1;}
+            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); Ndav -= 1;}            
+            preu_restant -= j.preu;
+        }
+    }
+
+    /*
     for(uint i=0; i<listpor.size() and not por_trobat; ++i){
         if(listpor[i].preu<=preu_restant){
             por_trobat = true;
@@ -211,7 +203,7 @@ void greedy(int Ndef, int Nmig, int Ndav, int T, int J,
             Ndav -= 1;
             preu_restant -= listdav[i].preu;
             E.afegir_jugador(listdav[i]);
-    }   }
+    }   } */
 
     return write_sol(fitxer_sortida, E, start);
 }
