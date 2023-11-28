@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <chrono>
+#include <iomanip>
 
 using namespace std;
 
@@ -84,6 +86,7 @@ class Tactic {
 vector<Jugador> listpor, listdef, listmig, listdav;
 Equip E_millor = Equip(0, 0, 0);
 int maxPuntspor=0, maxPuntsdef=0, maxPuntsmig=0, maxPuntsdav=0;
+vector<bool> Upor, Udef, Umig, Udav;
 
 bool ordre1(Jugador j1, Jugador j2){
     if(j1.punts == 0) return false;
@@ -91,13 +94,19 @@ bool ordre1(Jugador j1, Jugador j2){
     return (j1.punts*j1.punts / j2.preu) > (j2.punts*j2.punts / j2.preu);
 }
 
+bool ordre2(Jugador j1, Jugador j2){
+    if(j1.punts == 0) return false;
+    if(j2.punts == 0) return true;
+    return (j1.punts*0.7/ j2.preu*0.3) > (j2.punts*0.7 / j2.preu*0.3);
+}
 
-void write_sol(string fitxer_sortida_nom, Equip E){
 
+void write_sol(string fitxer_sortida_nom, Equip E, auto start){
+
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<float,std::milli> duration = end - start;
     ofstream fs(fitxer_sortida_nom);
 
-
-    //time!
     /*E.escriu_jugadors("POR", fs);
     E.escriu_jugadors("def", fs);
     E.escriu_jugadors("mig", fs);
@@ -105,6 +114,7 @@ void write_sol(string fitxer_sortida_nom, Equip E){
     fs << "Punts: " << E.punts << endl;
     fs << "Preu: " << E.preu << endl; */
 
+    fs <<setprecision( 1 )<< duration.count() / 1000 << endl;
     fs << "POR: " << E.por << endl;
     
     bool first = true;
@@ -136,10 +146,13 @@ void llegir_jugadors(ifstream& dades_jugadors,
                      vector<Jugador>& listpor,
                      vector<Jugador>& listdef,
                      vector<Jugador>& listmig,
-                     vector<Jugador>& listdav){
+                     vector<Jugador>& listdav,
+                     int J){
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
+
+    int Nportotal=0, Ndeftotal=0, Nmigtotal=0, Ndavtotal=0;
 
     while(not dades_jugadors.eof()){
         getline(dades_jugadors, nom, ';');
@@ -154,43 +167,52 @@ void llegir_jugadors(ifstream& dades_jugadors,
         if(nom=="") break;
 
 
-
-        if(pos=="por") {
-            maxPuntspor = max(maxPuntspor, j.punts);
-            listpor.push_back(j);
+        if(preu <= J){
+            if(pos=="por") {
+                maxPuntspor = max(maxPuntspor, j.punts);
+                listpor.push_back(j);
+                Nportotal += 1;
+            }
+            if(pos=="def") {
+                maxPuntsdef = max(maxPuntsdef, j.punts);
+                listdef.push_back(j);
+                Ndeftotal += 1;
+            }
+            if(pos=="mig") {
+                maxPuntsmig = max(maxPuntsmig, j.punts);
+                listmig.push_back(j);
+                Nmigtotal += 1;
+            }
+            if(pos=="dav") {
+                maxPuntsdav = max(maxPuntsdav, j.punts);
+                listdav.push_back(j);
+                Ndavtotal += 1;
+            }
         }
-        if(pos=="def") {
-            maxPuntsdef = max(maxPuntsdef, j.punts);
-            listdef.push_back(j);
-        }
-        if(pos=="mig") {
-            maxPuntsmig = max(maxPuntsmig, j.punts);
-            listmig.push_back(j);
-        }
-        if(pos=="dav") {
-            maxPuntsdav = max(maxPuntsdav, j.punts);
-            listdav.push_back(j);
-        }
-
         //cout<<nom<<";"<<pos<<";"<<preu<<";"<<club<<";"<<punts<<endl;
     }
 
-    sort(listpor.begin(), listpor.end(), ordre1);
-    sort(listdef.begin(), listdef.end(), ordre1);
-    sort(listmig.begin(), listmig.end(), ordre1);
-    sort(listdav.begin(), listdav.end(), ordre1);
+    Upor = vector<bool>(Nportotal);
+    Udef = vector<bool>(Ndeftotal);
+    Umig = vector<bool>(Ndeftotal);
+    Udav = vector<bool>(Ndavtotal);
+
+    std::sort(listpor.begin(), listpor.end(), ordre1);
+    std::sort(listdef.begin(), listdef.end(), ordre1);
+    std::sort(listmig.begin(), listmig.end(), ordre1);
+    std::sort(listdav.begin(), listdav.end(), ordre1);
 }
 
 
 void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
-            string fitxer_sortida){
+            string fitxer_sortida, auto start){
     if( T<0 or (E.punts + Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E_millor.punts)) return;
     
     
     if (Npor+Ndef+Nmig+Ndav == 0 and E.punts > E_millor.punts){
         E_millor = E;
         cout << E_millor.punts;
-        return write_sol(fitxer_sortida, E);
+        return write_sol(fitxer_sortida, E, start);
     }
 
 
@@ -200,51 +222,60 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
                 E.por = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                exh_search_rec(E, Npor-1, Ndef, Nmig, Ndav, T-j.preu, J, fitxer_sortida);
+                exh_search_rec(E, Npor-1, Ndef, Nmig, Ndav, T-j.preu, J, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
     }}}
 
     if(Ndef > 0){
-        for(Jugador j : listdef){
-            if(j.preu <= J and j.preu <= T){
+        for(uint i=0; i<listdef.size(); i++){
+            Jugador j = listdef[i];
+            if(j.preu <= J and j.preu <= T and not Udef[i]){
                 E.def[Ndef-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                exh_search_rec(E, Npor, Ndef-1, Nmig, Ndav, T-j.preu, J, fitxer_sortida);
+                Udef[i] = true;
+                exh_search_rec(E, Npor, Ndef-1, Nmig, Ndav, T-j.preu, J, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
+                Udef[i] = false;
     }}}
 
     if(Nmig > 0){
-        for(Jugador j : listmig){
-            if(j.preu <= J and j.preu <= T){
+        for(uint i=0; i<listmig.size(); i++){
+            Jugador j = listmig[i];
+            if(j.preu <= J and j.preu <= T and not Umig[i]){
                 E.mig[Nmig-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                exh_search_rec(E, Npor, Ndef, Nmig-1, Ndav, T-j.preu, J, fitxer_sortida);
+                Umig[i] = true;
+                exh_search_rec(E, Npor, Ndef, Nmig-1, Ndav, T-j.preu, J, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
+                Umig[i] = false;
     }}}
 
     if(Ndav > 0){
-        for(Jugador j : listdav){
-            if(j.preu <= J and j.preu <= T){
+        for(uint i=0; i<listdav.size(); i++){
+            Jugador j = listdav[i];
+            if(j.preu <= J and j.preu <= T and not Udav[i]){
                 E.dav[Ndav-1] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                exh_search_rec(E, Npor, Ndef, Nmig, Ndav-1, T-j.preu, J, fitxer_sortida);
+                Udav[i] = true;
+                exh_search_rec(E, Npor, Ndef, Nmig, Ndav-1, T-j.preu, J, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
+                Udav[i] = false;
     }}}
 }
 
 
 void exh_search(int Ndef, int Nmig, int Ndav, int T, int J,
-            string fitxer_sortida){
+            string fitxer_sortida, auto start){
     Equip E = Equip(Ndef, Nmig, Ndav);
     E_millor = Equip(Ndef, Nmig, Ndav);
-    return exh_search_rec(E, 0, Ndef, Nmig, Ndav, T, J, fitxer_sortida);
+    return exh_search_rec(E, 1, Ndef, Nmig, Ndav, T, J, fitxer_sortida, start);
 }
 
 
@@ -254,16 +285,19 @@ int main(int argc, char** argv){
             " bench.txt" << " output.txt" << endl;
     exit(1);
     }
+    auto start = std::chrono::system_clock::now();
+
     ifstream dades_jugadors(argv[1]);
     ifstream plantilla(argv[2]);
     string fitxer_sortida = argv[3];
-    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav);
-
     int Ndef, Nmig, Ndav, T, J;
 
     plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
     plantilla.close();
 
-    exh_search(Ndef,Nmig,Ndav,T,J, fitxer_sortida);
+    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav, J);
+
+
+    exh_search(Ndef,Nmig,Ndav,T,J, fitxer_sortida, start);
 
 }
