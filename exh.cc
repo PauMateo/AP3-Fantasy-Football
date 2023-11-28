@@ -72,16 +72,6 @@ class Equip {
 };
 
 
-class Tactic {
-    public:
-        uint goal;
-        uint def;
-        uint mid;
-        uint str;
-        Tactic() {}
-        Tactic(uint g, uint d, uint m, uint s):goal(g), def(d), mid(m), str(s) {}
-};
-
 
 vector<Jugador> listpor, listdef, listmig, listdav;
 Equip E_millor = Equip(0, 0, 0);
