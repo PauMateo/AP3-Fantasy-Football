@@ -23,6 +23,7 @@ class Jugador {
 };
 
 
+
 class Equip {
     public:
         string por;
@@ -35,14 +36,14 @@ class Equip {
         Equip():
             por(""), def(vector<string>()), mig(vector<string>()),
             dav(vector<string>()), punts(0), preu(0){}
-/*
+        /*
         Equip(const Jugador& por, 
               const vector<Jugador>& def,
               const vector<Jugador>& mig,
               const vector<Jugador>& dav,
               const int punts, const int preu):
             por(por), def(def), mig(mig), dav(dav), punts(punts), preu(preu){}
-*/
+        */
         //controlar també el nombre dels jugadors des de la classe? 
         //-> return false quan ja no pots posar més defenses, etc.
         void afegir_jugador(Jugador j){
@@ -72,6 +73,7 @@ class Equip {
 };
 
 
+/*
 class Tactic {
     public:
         uint goal;
@@ -80,7 +82,7 @@ class Tactic {
         uint str;
         Tactic() {}
         Tactic(uint g, uint d, uint m, uint s):goal(g), def(d), mid(m), str(s) {}
-};
+}; */
 
 void write_sol(ofstream& fs, Equip E, auto start){
     //time!
@@ -234,5 +236,4 @@ int main(int argc, char** argv){
     plantilla.close();
 
     greedy(Ndef,Nmig,Ndav,T,J,dades_jugadors, fitxer_sortida, start);
-
 }
