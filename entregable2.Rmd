@@ -46,8 +46,8 @@ Sí, ja que podria ser que entre diferents espèices d'IRIS la relació entre l'
 ggplot(irisdat4) + 
   aes(y = Sepal.Length, x = Sepal.Width, color = Species) + 
   geom_point() + 
-  geom_smooth(se = FALSE, method = "lm")
-
+  geom_smooth(se = FALSE, method = "lm") + 
+  theme_minimal()
 ```
 
 D'entrada s'observa que els tres pendents son molt similars, el que sembla indicar que la interacció entre les variables explicatives no és significativa (és a dir, que ...).
@@ -61,20 +61,53 @@ També es veu que les dades de l'espècie sectosa estan separades de les altres 
 ```{r}
 model1 = lm(Sepal.Length ~ Sepal.Width, data=irisdat4)
 summary(model1)
+
 ```
 
 ### 5.1) Quina és l'estimació de la veriància que heu obtingut?
 
+L'estimació de la variança és $0.8251 ^2 = 0.68078$.
+
 ### 5.2) Quina part de la variabilitat de la variable resposta és explicada pel model?
+
+Com que $R^2 = 0.0138$, aleshores el model explica
 
 ### 5.3) Quin és el residu més gran que heu trobat?
 
+```{r}
+max_res = irisdat4[ which.max(abs(residuals(model1))), ]
+max_res = data.frame(max_res$Sepal.Length, max_res$Sepal.Width, max_res$Species)
+max_res
+```
+
+
+El residu més gran és de 2.2226, que correspon a la mostra 132, amb valors Sepal length = 8.06 , Sepal width = 3.8 i Species=3, que correspon a l'espèice virginica.
+
+
 ### 5.4) Hi ha valors que tinguin un leverage superior al permès (feu servir la fita més acurada)? Quants?
+```{r}
+
+p = ncol(model.matrix(model1))
+n = nrow(irisdat4)
+cond_lev = 3*p/n
+res = irisdat4[which(hatvalues(model1)>cond_lev),]
+res = data.frame(res$X, res$Sepal.Length, res$Sepal.Width, res$Species)
+res
+```
+Aquestes son les mostres que tenen un leverage superior al permès. 
 
 
 ### 5.5) Feu el plot dels residus i comenteu tres coses de les que considereu importants.
 
+```{r, fig.align = 'center', out.width = "120%", fig.show="hold"}
+par(mfrow = c(2,2))
+plot(model1)
 
+```
+
+Podem veure que l'hipòtesis de normalitat de residus no s'acaba de complir, ja que a la gràfica de Residuals vs Fitted els errors no son del tot homogenis (son més grans al voltant del valor 6), i a l'extrem del qq-plot hi ha una mica de corvatura que no hi hauria de ser.
+L'hipòtesis d'homodeasticitat tampoc es compleix del tot, ja que al plot de Scale-Location veiem que la desviació augmenta fins al valor 6 i després torna a disminuïr una mica.
+I a la última gràfica veiem que no hi ha cap mostra que sigui molt influent (que tingui una Cook's distance gran). Dues que potser ho son més són les mostres 118 i 132
 
 
 
