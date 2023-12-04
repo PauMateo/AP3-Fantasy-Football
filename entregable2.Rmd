@@ -59,7 +59,8 @@ També es veu que les dades de l'espècie sectosa estan separades de les altres 
 ## 5) Ajusteu un model de regressió lineal simple i contestes les següents preguntes:
 
 ```{r}
-model1 = lm(irisdat4$Sepal.Length~irisdat4$, data=irisdat4)
+model1 = lm(Sepal.Length ~ Sepal.Width, data=irisdat4)
+summary(model1)
 ```
 
 ### 5.1) Quina és l'estimació de la veriància que heu obtingut?
