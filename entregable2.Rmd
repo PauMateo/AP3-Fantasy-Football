@@ -1,0 +1,126 @@
+---
+title: "PIE2 - Entregable 2"
+author: "PauM PauF"
+date: "2023-12-03"
+output: 
+  html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+
+irisdat4 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat4.csv", stringsAsFactors=TRUE)
+
+irisdat5 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat5.csv", stringsAsFactors=TRUE)
+```
+
+
+# EXERCICI 1
+
+**Es vol predir la longitud del sèpal de plantes de IRIS en funció de l’amplada del sèpal i de l’espècie
+de IRIS. Llegiu les dades i contesteu les preguntes següents. **
+
+## 1) Especifiqueu quina és la variable resposta i quines son les explicatives així com el tipus de variable del que es tracta.
+
+La variable resposta és la longitut del sèpal i les variables explicatives són l'amplada del sèpal (variable numèrica) i l'espècie d'IRIS (variable categòrica).
+
+
+## 2) Quines son les preguntes que té sentit contestar? 
+
+Les preguntes que més ens interessaria contestar són:
+  - 
+
+
+## 3) Té sentit parlar d’interacció en aquest exercici?. Si és que sí, com l’interpretarieu?
+
+Sí, ja que podria ser que entre diferents espèices d'IRIS la relació entre l'amplada del sèpal i la longitud del sèpal fos diferent, i aleshores hauriem de tenir en compte l'interacció entre les dues variables explicatives per a que el nostre model expliqui millor les dades.
+
+--interpretació?
+
+
+## 4) Dibuixeu de forma exploratòria el vostre conjunt de dades i en base al gràfic o gràfics realitzats, treieu unes primeres conclusions, especifiqueu-ne tres (caldrà comprovar-les més endavant).
+
+```{r}
+ 
+ggplot(irisdat4) + 
+  aes(y = Sepal.Length, x = Sepal.Width, color = Species) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = "lm")
+
+```
+
+D'entrada s'observa que els tres pendents son molt similars, el que sembla indicar que la interacció entre les variables explicatives no és significativa (és a dir, que ...).
+
+També es veu que les dades de l'espècie sectosa estan separades de les altres dues
+
+
+
+## 5) Ajusteu un model de regressió lineal simple i contestes les següents preguntes:
+
+```{r}
+model1 = lm(irisdat4$Sepal.Length~irisdat4$, data=irisdat4)
+```
+
+### 5.1) Quina és l'estimació de la veriància que heu obtingut?
+
+### 5.2) Quina part de la variabilitat de la variable resposta és explicada pel model?
+
+### 5.3) Quin és el residu més gran que heu trobat?
+
+### 5.4) Hi ha valors que tinguin un leverage superior al permès (feu servir la fita més acurada)? Quants?
+
+
+### 5.5) Feu el plot dels residus i comenteu tres coses de les que considereu importants.
+
+
+
+
+
+## 6) Ajusteu un model que tingui com a explicatives les dues variables esmentades a l’enunciat i que no son la variable resposta (model 2).
+```{r}
+model2 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat4)
+summary(model2)
+```
+
+### 6.1) Quants paràmetres té el vostre model? Tots els paràmetres son significatius?
+El model
+### 6.2) Com interpreteu els paràmetres obtnguts? (una frase per a cada paràmetre).
+### 6.3) Quina part de la variabilitat de les dades explica el vostre model?
+### 6.4) Quina és l’estimació de la variància residual que obteniu?
+### 6.5) Quina és la matriu del disseny (matriu X) associada al model que esteu ajustant?
+### 6.6) Feu els plots dels residus que creieu necessaris i treieu-ne tres conclusions que considereu importants.
+### 6.7) Creieu que és necessàri treure alguna observació del conjunt de dades?. Justifiqueu la vostra resposta. En cas que sigui necessàri feu-ho i torneu a ajustar el model.
+
+
+
+## 7) Amb el conjunt de dades que us hagiu quedat al final de l’apartat 6), ajusteu un model que assumeixi que les dues variables explicatives del model 2 interaccionen (model3).
+### 7.1) Us surt significativa la interacció?
+### 7.2) Quina és l’estimació de la variància residual?
+### 7.3) Interpreteu els paràmetres que us surtin significatius (una frase per a cada paràmetre).
+### 7.4) Han millorat els gràfics de residus respecte als trobats amb el model 2? Justifiqueu la vostra resposta.
+## 9) Feu una taula comparativa dels tres models ajustats i que us permeti decidir quin dels tres és el millor. Justifiqueu en paraules la vostra elecció.
+## 10) Pel model escollit, prediu quina és la longitud esperada d’un sèpal que tingui una amplada de 38:00 per a cadascúna de les espècies que tenim. Expliciteu tant l’estimació puntual com l’intèrval de confiança al 95%.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
