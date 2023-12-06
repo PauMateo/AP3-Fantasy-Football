@@ -13,6 +13,8 @@ library(ggplot2)
 irisdat4 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat4.csv", stringsAsFactors=TRUE)
 
 irisdat5 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat5.csv", stringsAsFactors=TRUE)
+library(wesanderson)
+library(RColorBrewer)
 ```
 
 
@@ -42,17 +44,19 @@ Sí, ja que podria ser que entre diferents espèices d'IRIS la relació entre l'
 ## 4) Dibuixeu de forma exploratòria el vostre conjunt de dades i en base al gràfic o gràfics realitzats, treieu unes primeres conclusions, especifiqueu-ne tres (caldrà comprovar-les més endavant).
 
 ```{r}
- 
-ggplot(irisdat4) + 
+gplot <- ggplot(irisdat4) + 
   aes(y = Sepal.Length, x = Sepal.Width, color = Species) + 
   geom_point() + 
   geom_smooth(se = FALSE, method = "lm") + 
   theme_minimal()
+
+# Canvi de colors dels punts segons l'espècie
+gplot + scale_color_manual(values = wes_palette("GrandBudapest1", n = 3))
 ```
 
 D'entrada s'observa que els tres pendents son molt similars, el que sembla indicar que la interacció entre les variables explicatives no és significativa (és a dir, que ...).
 
-També es veu que les dades de l'espècie sectosa estan separades de les altres dues
+També es veu que les dades de l'espècie sectosa esta separada de les altres dues.
 
 
 
@@ -118,12 +122,37 @@ summary(model2)
 ```
 
 ### 6.1) Quants paràmetres té el vostre model? Tots els paràmetres son significatius?
-El model
-### 6.2) Com interpreteu els paràmetres obtnguts? (una frase per a cada paràmetre).
+El model 2 té 4 paràmetres i tots són significatius.
+
+### 6.2) Com interpreteu els paràmetres obtinguts? (una frase per a cada paràmetre).
+L'espècie de referència d'aquest model és la setosa. Aleshores, els paràmetres els interpretem com:
+
+Intercept: longitut del sèpal de l'espècie setosa quan l'amplada del sèpal és 0.
+Sepal.Width: la longitut que augmenta el sèpal quan augmentem en una unitat la seva amplada.
+Species versicolor: diferència de longitut del sèpal entre l'espècie setosa i versicolor.
+Species virginica: diferència de longitut del sèpal entre l'espècie setosa i virginica.
+
 ### 6.3) Quina part de la variabilitat de les dades explica el vostre model?
+Ara el model explica molt millor les dades que el model d'abans; $R^2 = 0.7259$.
+
 ### 6.4) Quina és l’estimació de la variància residual que obteniu?
+Residual standard error = 0.438
+
 ### 6.5) Quina és la matriu del disseny (matriu X) associada al model que esteu ajustant?
+```{r}
+model.matrix(model2)
+```
+
+
+
 ### 6.6) Feu els plots dels residus que creieu necessaris i treieu-ne tres conclusions que considereu importants.
+
+```{r, fig.align = 'center', out.width = "120%", fig.show="hold"}
+par(mfrow = c(2,2))
+plot(model2)
+```
+
+
 ### 6.7) Creieu que és necessàri treure alguna observació del conjunt de dades?. Justifiqueu la vostra resposta. En cas que sigui necessàri feu-ho i torneu a ajustar el model.
 
 
