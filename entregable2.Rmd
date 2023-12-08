@@ -10,9 +10,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 
-irisdat4 <- read.csv2("C:/Users/paufe/Downloads/irisdat4.csv", stringsAsFactors=TRUE)
-irisdat5 <- read.csv2("C:/Users/paufe/Downloads/irisdat5.csv", stringsAsFactors=TRUE)
+irisdat4 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat4.csv", stringsAsFactors=TRUE)
 
+irisdat5 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat5.csv", stringsAsFactors=TRUE)
 library(wesanderson)
 library(RColorBrewer)
 ```
@@ -74,7 +74,7 @@ L'estimació de la variança és $0.8251 ^2 = 0.68078$.
 
 ### 5.2) Quina part de la variabilitat de la variable resposta és explicada pel model?
 
-Com que $R^2 = 0.007159$, aleshores el model descriu un 0.7159% de la variabilitat de la variable resposta en el model.
+Com que $R^2 = 0.0138$, aleshores el model explica
 
 ### 5.3) Quin és el residu més gran que heu trobat?
 
@@ -109,9 +109,9 @@ plot(model1)
 
 ```
 
-Podem veure que l'hipòtesis de normalitat de residus no s'acaba de complir, ja que a la gràfica de Residuals vs Fitted els errors no son del tot homogenis (son més grans al voltant del valor 6), i a l'extrem del qq-plot hi ha una mica de corbatura que no hi hauria de ser.
+Podem veure que l'hipòtesis de normalitat de residus no s'acaba de complir, ja que a la gràfica de Residuals vs Fitted els errors no son del tot homogenis (son més grans al voltant del valor 6), i a l'extrem del qq-plot hi ha una mica de corvatura que no hi hauria de ser.
 L'hipòtesis d'homodeasticitat tampoc es compleix del tot, ja que al plot de Scale-Location veiem que la desviació augmenta fins al valor 6 i després torna a disminuïr una mica.
-I a la última gràfica veiem que no hi ha cap mostra que sigui molt influent (que tingui una Cook's distance gran). Dues que potser ho son més són les mostres 118 i 132.
+I a la última gràfica veiem que no hi ha cap mostra que sigui molt influent (que tingui una Cook's distance gran). Dues que potser ho son més són les mostres 118 i 132
 
 
 
@@ -133,10 +133,10 @@ Species versicolor: diferència de longitut del sèpal entre l'espècie setosa i
 Species virginica: diferència de longitut del sèpal entre l'espècie setosa i virginica.
 
 ### 6.3) Quina part de la variabilitat de les dades explica el vostre model?
-Ara el model explica molt millor les dades que el model d'abans donat que $R^2 = 0.7203$ i, per tant, el model descriu un 72,03% de la variabilitat de les dades.
+Ara el model explica molt millor les dades que el model d'abans; $R^2 = 0.7259$.
 
 ### 6.4) Quina és l’estimació de la variància residual que obteniu?
-El residual standard error = 0.438, per tant, la  variància residual és $0.438^2 = 0.192$. 
+Residual standard error = 0.438
 
 ### 6.5) Quina és la matriu del disseny (matriu X) associada al model que esteu ajustant?
 ```{r}
@@ -158,7 +158,6 @@ Si, potser convindria treure aquelles observacions que són més influents en el
 Calculem doncs quines són aquestes mostres:
 
 ```{r}
-
 p = ncol(model.matrix(model2))
 n = nrow(irisdat4)
 cond_lev = 3*p/n
@@ -169,27 +168,178 @@ res
 Com podem veure, la mostra número 42 és influent, per tant, provem a eliminar-la i ajustar de nou el model a veure que obtenim:
 
 ```{r}
-
-irisdat42 <- irisdat4[-42, ]
-model3 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat42)
-summary(model3)
+irisdat4.1 <- irisdat4[-42, ]
+model2.1 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat42)
+summary(model2.1)
 ```
 No m'acaba de convèncer la opció d'abans... Vaig a provar eliminant els outliers del model que podem veure al qq-plot...
 
 ```{r}
-irisdat43 <- irisdat4[- c(119,123,107), ]
-model4 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat43)
-summary(model4)
+irisdat4.2 <- irisdat4[-c( 119, 123, 107),]
+model2.2 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat4.2)
+summary(model2.2)
 par(mfrow = c(2,2))
-plot(model4)
+plot(model2.2)
 ```
 A veure, sembla que així està millor d'aquesta manera ens surt un R^2 més bo i un Residual standard error menor, tot i que en la gràfica de residuals vs fitted ara ens dona pitjor que abans, jo crec que potser no cal eliminar cap dada, ens hem d'acabar de mirar això bé però...
 
 
+
 ## 7) Amb el conjunt de dades que us hagiu quedat al final de l’apartat 6), ajusteu un model que assumeixi que les dues variables explicatives del model 2 interaccionen (model3).
+
+```{r}
+model3 = lm(Sepal.Length ~ Sepal.Width * Species, data=irisdat4)
+summary(model3)
+```
 ### 7.1) Us surt significativa la interacció?
+No.
+
 ### 7.2) Quina és l’estimació de la variància residual?
+Hem obtingut una variància residual de 0.4397, que és quasi la mateixa que teníem amb el model 2.
+
 ### 7.3) Interpreteu els paràmetres que us surtin significatius (una frase per a cada paràmetre).
+
+Els paràmetres significatius que hem obtingut ja els haviem interpretat al model 2:
+
+Intercept: longitut del sèpal de l'espècie setosa quan l'amplada del sèpal és 0.
+Sepal.Width: la longitut que augmenta el sèpal quan augmentem en una unitat la seva amplada.
+
+
 ### 7.4) Han millorat els gràfics de residus respecte als trobats amb el model 2? Justifiqueu la vostra resposta.
+
+```{r, fig.align = 'center', out.width = "120%", fig.show="hold"}
+par(mfrow = c(2,2))
+plot(model3)
+```
+Com es pot veure, els residus no han millorat gaire. Potser una mica a la gràfica de Residual vs Fitted, però el qq-plot segueix sent molt dolent. Això 
+
+
 ## 9) Feu una taula comparativa dels tres models ajustats i que us permeti decidir quin dels tres és el millor. Justifiqueu en paraules la vostra elecció.
-## 10) Pel model escollit, prediu quina és la longitud esperada d’un sèpal que tingui una amplada de 38:00 per a cadascúna de les espècies que tenim. Expliciteu tant l’estimació puntual com l’intèrval de confiança al 95%.
+
+```{r}
+anova(model1, model2, model3)
+```
+
+(diria que és això el que volen que fem)
+
+El millor model es ...
+
+## 10) Pel model escollit, prediu quina és la longitud esperada d’un sèpal que tingui una amplada de 3.8 per a cadascúna de les espècies que tenim. Expliciteu tant l’estimació puntual com l’intèrval de confiança al 95%.
+
+```{r}
+newdata = data.frame(Sepal.Width = c(3.8, 3.8, 3.8),
+                     Species = c("setosa", "versicolor", "virginica"))
+predict(model2, newdata = newdata, interval = "confidence")
+
+```
+
+```{r}
+predict(model2, newdata = newdata, interval = "prediction")
+
+```
+
+
+
+
+
+
+#Exercici2 : Treballarem el mateix conjunt de dades que a l’Exercici 1. Ara però volem predir la Longitud d’un pètal. Podeu fer servir la resta de variables que tenim com a explicatives.
+
+##1) Porteu a terme l’scatterplotmatrix de les dades. Què observeu? (esmenteu tres coses que creieu importants).
+```{r}
+library(GGally)
+irisdat4_pairs = irisdat4[,!(names(irisdat4) %in% c("X","X.1"))]
+ggpairs(irisdat4_pairs)
+```
+
+
+##2) Ajusteu un model de regresió linel múltiple amb les explicatives que teniu (model 4). Per a aquest model contesteu les preguntes següents:
+
+```{r}
+ model4 = lm(Petal.Length ~ Petal.Width+Sepal.Length+Sepal.Width,data = irisdat4)
+summary(model4)
+
+```
+###2.1) Quin és el valor de R2 i R2 adj?
+Multiple R-squared:  0.968,	Adjusted R-squared:  0.9674 
+
+###2.2) Quins son els residus mínim i màxim?
+El mínim és de -0.99333 i el màxim és de 1.06909 
+###2.3) Hi ha alguna observació amb leverage?
+
+```{r}
+p = ncol(model.matrix(model4))
+n = nrow(irisdat4)
+cond_lev = 3*p/n
+res = irisdat4[which(hatvalues(model2)>cond_lev),]
+res = data.frame(res$X, res$Petal.Length, res$Species)
+res
+```
+
+Podem veure que no hi ha cap observació amb leverage.
+
+###2.4) Hi ha alguna observació influent?
+
+(diria que no)
+
+###2.5) Quina variable té el VIF més gran? És acceptable aquest valor?
+
+```{r}
+library(HH)
+vif(model4)
+```
+
+###2.6) Interpreteu els paràmetres associats a totes les variables que creieu us surtin significatives (una frase per a cada paràmetre).
+
+Petal.Width: el que augmenta la llargada del pètal per cada unitat que augmenti la seva amplada
+Sepal.Length: el que augmenta la llargada del pètal per cada unitat que augmenti la longitut del sèpal
+Sepal.Width: el que augmenta la llargada del pètal per cada unitat que augmenti l'amplada del sèpal
+
+
+###2.7) Podem afirmar que el coeficient de la variable Amplada del pètal és estadísticament igual a 1.5?
+
+Podem veure els intèrvals de confiança dels coeficients del nostre model de la següent manera:
+
+```{r}
+confint(model4)
+```
+Per tant, sí que podem afirmar que, estadísticament i amb un nivell de confiança del 95%, el coeficient de la variable amplada del pètal
+
+##3) Amplieu el model anterior afegint la variable espècie (model5), i justifiqueu quin dels dos models (m4 i m5) és millor (feu una taula comparativa).
+
+```{r}
+model5 = lm(Petal.Length ~ Petal.Width+Sepal.Length+Sepal.Width+Species, data = irisdat4)
+
+anova(model4, model5)
+
+```
+
+
+##4) Pel model que hagiu escollit,
+###4.1) Quants residus estandaritzats cauen fora de l’inferval (-2; 2)? Creieu que és un percentatge escaient?
+
+```{r}
+plot(model4, which = 3)  # (o bé model4)
+
+```
+
+No ens cau cap residu fora de l'intèrval (-2, 2), quan la proporció de residus que cauen fora d'aquest intèrval hauria de representar un 5% aproximadament del total.
+
+
+###4.2) Quina és la longitud del pètal esperada, per a una flor que tingui una amplada del pètal igual a 2.1, una longitud del sèpal igual a 5 i una amplada del sèpal igual a 3.5? Trobeu l’estimació puntual i per interval de confiança per a cadascúna de les espècies.
+
+```{r}
+newdata = data.frame(Petal.Width = c(2.1, 2.1, 2.1),
+                     Sepal.Width = c(3.5, 3.5, 3.5),
+                     Sepal.Length = c(5, 5, 5),
+                     Species = c("setosa", "versicolor", "virginica"))
+
+predict(model2, newdata = newdata, interval = "prediction")
+```
+
+
+
+
+
+
+
