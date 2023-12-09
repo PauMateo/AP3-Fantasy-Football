@@ -51,6 +51,12 @@ gplot <- ggplot(irisdat4) +
   theme_minimal()
 
 # Canvi de colors dels punts segons l'espècie
+
+indices_destacar <- c(69, 106, 107, 119, 123, 131, 132, 136)
+mostres_destacades <- irisdat4[irisdat4$X %in% indices_destacar, ]
+
+# Afegir etiquetes a les mostres destacades
+gplot + geom_text(data = mostres_destacades, aes(label = X), vjust = -1)
 gplot + scale_color_manual(values = wes_palette("GrandBudapest1", n = 3))
 ```
 
@@ -158,14 +164,59 @@ Si, potser convindria treure aquelles observacions que són més influents en el
 Calculem doncs quines són aquestes mostres:
 
 ```{r}
-p = ncol(model.matrix(model2))
-n = nrow(irisdat4)
-cond_lev = 3*p/n
-res = irisdat4[which(hatvalues(model2)>cond_lev),]
-res = data.frame(res$X, res$Sepal.Length, res$Sepal.Width, res$Species)
-res
+irisdat4$cook = cooks.distance(model2)
+cond_cook = irisdat4$cook > 4/n
+
+cond_cook
+indexs_true <- which(cond_cook)
+indexs_true
+table(cond_cook)
+
+high_lev = penguins[cond_lev, c("species", "flipper_length_mm", "body_mass_g",
+                                "resid", "lev", "cook")]
+high_cook = irisdat4[cond_cook, c("species", "flipper_length_mm", "body_mass_g",
+                                  "resid", "lev", "cook")]
+high_lev[order(high_lev$lev, decreasing = TRUE), ]
+high_cook[order(high_cook$cook, decreasing = TRUE), ]
+
+summary(penguins)
 ```
-Com podem veure, la mostra número 42 és influent, per tant, provem a eliminar-la i ajustar de nou el model a veure que obtenim:
+Aquestes són les mostres que tenen una cook's distance més gran de $4/n$.
+Sempre va bé mirar quines són les mostres :
+
+
+```{r, echo=false}
+gplot <- ggplot(irisdat4) + 
+  aes(y = Sepal.Length, x = Sepal.Width, color = Species) + 
+  geom_point() + 
+  geom_smooth(se = FALSE, method = "lm") + 
+  theme_minimal()
+
+
+# Mostres de cook's distance gran
+indexs = c(69, 106, 107, 119, 123, 131, 132, 136)
+mostres_cook <- irisdat4[irisdat4$X %in% indexs, ]
+
+# Afegir etiquetes a les mostres destacades
+gplot <- gplot + geom_text(data = mostres_cook, aes(label = X), vjust = -1)
+
+
+# Càlcul dels centroids per cada espècie
+centroids <- irisdat4 %>%
+  group_by(Species) %>%
+  summarize(mean_Sepal.Length = mean(Sepal.Length),
+            mean_Sepal.Width = mean(Sepal.Width))
+
+gplot <- gplot + 
+  geom_point(data = centroids, aes(x = mean_Sepal.Width, y = mean_Sepal.Length),
+             shape = 18, size = 6)
+gplot <- gplot + scale_color_manual(values = wes_palette("GrandBudapest1", n = 3))
+gplot
+
+```
+
+
+
 
 ```{r}
 irisdat4.1 <- irisdat4[-42, ]
@@ -265,6 +316,8 @@ Multiple R-squared:  0.968,	Adjusted R-squared:  0.9674
 
 ###2.2) Quins son els residus mínim i màxim?
 El mínim és de -0.99333 i el màxim és de 1.06909 
+
+
 ###2.3) Hi ha alguna observació amb leverage?
 
 ```{r}
@@ -285,9 +338,12 @@ Podem veure que no hi ha cap observació amb leverage.
 ###2.5) Quina variable té el VIF més gran? És acceptable aquest valor?
 
 ```{r}
-library(HH)
+library(car)
 vif(model4)
 ```
+
+El VIF més gran és de 3.8, de la variable Petal.Width, que vol dir que hi ha com a mínim dues variables que estan moderadament correlades. Com que l'altra variable que té un VIF gran és la de Sepal.Length, sembla que l'amplada i la longitut del pètal estan correlades, tal com ja podiem veure al ggpairs de l'apartat 1). Segurament amb només un
+
 
 ###2.6) Interpreteu els paràmetres associats a totes les variables que creieu us surtin significatives (una frase per a cada paràmetre).
 
