@@ -388,18 +388,18 @@ anova(model4, model5)
 
 ```
 
-Obtenim que el millor model és el model 5 -------- més
+Obtenim que...............................
 
 ##### **4) Pel model que hagiu escollit, **
 
 ##### **4.1) Quants residus estandaritzats cauen fora de l'inferval (-2; 2)? Creieu que és un percentatge escaient?**
 
 ```{r, fig.align = 'center'}
-plot(model5, which=5)
-length(which(abs(rstandard(model5)) > 2))
+plot(abs(rstandard(model5)))
+abline(a=2, b=0)
 ```
 
-------------------------------------------------------------------------
+Tenim exactament 8 residus fora de l'interval (-2, 2), que representen un 5.33% dels residus. Aquest és un percentatge adequat, ja que indica que els residus segueixen una distribució normal.
 
 ##### **4.2) Quina és la longitud del pètal esperada, per a una flor que tingui una amplada del pètal igual a 2.1, una longitud del sèpal igual a 5 i una amplada del sèpal igual a 3.5? Trobeu l'estimació puntual i per interval de confiança per a cadascúna de les espècies.**
 
