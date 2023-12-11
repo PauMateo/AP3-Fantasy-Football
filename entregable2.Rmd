@@ -10,11 +10,14 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(car)
 library(ggplot2)
 library(moderndive)
 library(wesanderson)
+library(dplyr)
 library(RColorBrewer)
+library(GGally)
 
 irisdat4 <- read.csv2("C:/Users/pauma/OneDrive/Escritorio/UNI/2n/PIE2/PIE2Entr2/irisdat4.csv", stringsAsFactors=TRUE)
 ```
@@ -139,8 +142,8 @@ Aleshores, els paràmetres els interpretem com:
 
 * Intercept: longitud del sèpal de l'espècie setosa (espècie de referència) quan l'amplada del sèpal és 0.
 * Sepal.Width: la longitud que augmenta el sèpal quan augmentem en una unitat la seva amplada.
-* Species versicolor: diferència de longitud del sèpal entre l'espècie versicolor i setosa.
-* Species virginica: diferència de longitud del sèpal entre l'espècie virginica i setosa.
+* Species versicolor: diferència de longitud del sèpal entre l'espècie versicolor i setosa (fixada una amplada de sèpal).
+* Species virginica: diferència de longitud del sèpal entre l'espècie virginica i setosa 
 
 ##### **6.3) Quina part de la variabilitat de les dades explica el vostre model?**
 
@@ -192,8 +195,7 @@ indexs_true
 Sempre va bé situar les mostres al conjunt de dades:
 
 ```{r, fig.align = 'center'}
-library(ggplot2)
-library(moderndive)
+
 gplot <- ggplot(irisdat4) + 
   aes(y = Sepal.Length, x = Sepal.Width, color = Species) + 
   geom_point() + 
@@ -209,7 +211,6 @@ mostres_cook <- irisdat4[irisdat4$X %in% indexs, ]
 gplot <- gplot + geom_text(data = mostres_cook, aes(label = X), vjust = -1)
 
 
-library(dplyr)
 # Càlcul dels centroids per cada espècie
 centroids <- irisdat4 %>%
   group_by(Species) %>%
@@ -233,7 +234,7 @@ model2.1 = lm(Sepal.Length ~ Sepal.Width + Species, data=irisdat4.1)
 summary(model2.1)
 ```
 
-```{r, out.width = "160%", fig.show="hold"}
+```{r, out.width = "200%", fig.show="hold", fig.align='center'}
 par(mfrow = c(2,2))
 plot(model2.1)
 ```
@@ -250,11 +251,10 @@ summary(model3)
 ##### **7.1) Us surt significativa la interacció?**
 
 No, no ens surt significativa. 
-.....................(més cose?)
 
 ##### **7.2) Quina és l'estimació de la variància residual?**
 
-.............................., que és quasi la mateixa que teníem amb el model 2.
+Obtenim una estimació de la variància de `r summary(model3)$sigma **2`, que és quasi la mateixa que teníem amb el model 2.
 
 ##### **7.3) Interpreteu els paràmetres que us surtin significatius (una frase per a cada paràmetre).**
 
@@ -262,12 +262,13 @@ Els paràmetres significatius que hem obtingut són:
 
 * Intercept: longitud del sèpal de l'espècie setosa (espècie de referència) quan l'amplada del sèpal és 0.
 * Sepal.Width: la longitud que augmenta el sèpal quan augmentem en una unitat la seva amplada.
-* Speciesvirginica: -------------------------
+* Speciesvirginica: diferència de longitud del sèpal entre l'espècie virginica i setosa (fixada una amplada de sèpal).
+  
 
 ##### **7.4) Han millorat els gràfics de residus respecte als trobats amb el model 2? Justifiqueu la vostra resposta.**
 
-```{r, fig.align = 'center', out.width = "120%", fig.show="hold"}
-#par(mfrow = c(2,2))
+```{r, fig.align = 'center', out.width = "150%", fig.show="hold"}
+par(mfrow = c(2,2))
 plot(model3)
 ```
 
@@ -276,21 +277,25 @@ Potser una mica a la gràfica de Residual vs Fitted, però el qq-plot continua m
 
 ##### **9) Feu una taula comparativa dels tres models ajustats i que us permeti decidir quin dels tres és el millor. Justifiqueu en paraules la vostra elecció.**
 
+Per poder fer una taula comparativa dels tres models alhora amb la funció *anova( )*, tots els models que li passem a la funció han d'estar entrenats amb el mateix dataset. Per tant, podem tornar a ajustar el model1. Realment no caldira perquè el model1 ja es veu que no serà el millor dels tres, ja que explica molt malament les dades al no tenir en compte les diferents espècies, i té un R-squared de `r summary(model1)$r.squared`, que és molt més baix que el dels models 2 i 3.
+
 ```{r}
-model1_prova = lm(Sepal.Length ~ Sepal.Width, data=irisdat4.1)
-anova(model1_prova, model2.1, model3)
+model1.new_data = lm(Sepal.Length ~ Sepal.Width, data=irisdat4.1)
+anova(model1.new_data, model2.1, model3)
 ```
 
-El millor model es el model2.1
+Obtenim que el millor model és el 2.1. Això vol dir que aquest, amb menys paràmetres que el model3, explica les dades quasi igual de bé. També es pot veure comparant els adjusted R-squared dels models: el model 2.1 té un adj. R-squared de `r summary(model2.1)$adj.r.squared`, i el model 3 té un adj. R-squared de `r summary(model3)$adj.r.squared`, que és lleugerament inferior al model 2.1 i per tant "no val la pena" afegir els paràmetres de l'interacció.
 
-##### **10) Pel model escollit, prediu quina és la longitud esperada d'un sèpal que tingui una amplada de 3.8 per a cadascúna de les espècies que tenim. Expliciteu tant l'estimació puntual com l'intèrval de confiança al 95%.**
+
+##### **10) Pel model escollit, prediu quina és la longitud esperada d'un sèpal que tingui una amplada de 3.8 per a cadascúna de les espècies que tenim? Expliciteu tant l'estimació puntual com l'intèrval de confiança al 95%.**
 
 ```{r}
 newdata = data.frame(Sepal.Width = c(3.8, 3.8, 3.8),
                      Species = c("setosa", "versicolor", "virginica"))
 predict(model2.1, newdata = newdata, interval = "prediction")
-
 ```
+
+Hem interpretat que se'ns demanava l'intèrval de confiança per a aquesta nova predicció
 
 # Exercici 2
 
@@ -298,8 +303,7 @@ predict(model2.1, newdata = newdata, interval = "prediction")
 
 #### **1) Porteu a terme l'scatterplotmatrix de les dades. Què observeu?**
 
-```{r}
-library(GGally)
+```{r, out.width = "150%", fig.show="hold", fig.align='center'}
 irisdat4_pairs = irisdat4[,!(names(irisdat4) %in% c("X","X.1", "cook"))]
 ggpairs(irisdat4_pairs)
 ```
@@ -342,22 +346,22 @@ Només tenim una observació amb leverage; la 132.
 
 ```{r}
 irisdat4$cook = cooks.distance(model4)
-# n és la mateixa
 cond_cook = irisdat4$cook > 4/n
 
 indexs_true <- which(cond_cook)
 indexs_true
 ```
 
+Podem veure que tenim bastantes mostres influents en aquest model.
+
+
 ##### **2.5) Quina variable té el VIF més gran? És acceptable aquest valor?**
 
 ```{r}
-library(car)
 vif(model4)
 ```
 
-El VIF més gran és de 3.8, de la variable Petal.Width, que vol dir que hi ha com a mínim dues variables que estan moderadament correlades.
-Com que l'altra variable que té un VIF gran és la de Sepal.Length, sembla que l'amplada del pètal i la longitud del sèpal estan correlades, tal com ja podiem veure al ggpairs de l'apartat 1).
+El VIF més gran és de 3.8, de la variable Petal.Width, que vol dir que hi ha com a mínim dues variables que estan moderadament correlades, però és un valor acceptable (inferior a 5). Com que l'altra variable que té un VIF gran és la de Sepal.Length, implica que l'amplada del pètal i la longitud del sèpal estan correlades, tal com ja podiem veure al ggpairs de l'apartat 1).
 
 ##### **2.6) Interpreteu els paràmetres associats a totes les variables que creieu us surtin significatives (una frase per a cada paràmetre).**
 
@@ -410,5 +414,5 @@ newdata = data.frame(Petal.Width = c(2.1, 2.1, 2.1),
                      Sepal.Length = c(5, 5, 5),
                      Species = c("setosa", "versicolor", "virginica"))
 
-predict(model5, newdata = newdata, interval = "prediction")
+predict(model5, newdata = newdata, interval = "confidence")
 ```
