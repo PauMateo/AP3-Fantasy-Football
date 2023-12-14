@@ -9,6 +9,21 @@
 using namespace std;
 
 
+class Entrada {   //Plantilla??
+    public:
+        int Npor = 1;
+        int Ndef;
+        int Nmig;
+        int Ndav;
+        int T;
+        int J;
+
+        Entrada(ifstream& fitxer){
+            fitxer >> Ndef >> Nmig >> Ndav >> T >> J;
+        }
+};
+
+
 class Jugador {
     public:
         string nom;
@@ -19,9 +34,7 @@ class Jugador {
 
         Jugador(const string& n, const string& pos, int pr, const string& c, int p):
             nom(n), pos(pos), preu(pr), club(c), punts(p){}
-
 };
-
 
 
 class Equip {
@@ -36,14 +49,7 @@ class Equip {
         Equip():
             por(""), def(vector<string>()), mig(vector<string>()),
             dav(vector<string>()), punts(0), preu(0){}
-        /*
-        Equip(const Jugador& por, 
-              const vector<Jugador>& def,
-              const vector<Jugador>& mig,
-              const vector<Jugador>& dav,
-              const int punts, const int preu):
-            por(por), def(def), mig(mig), dav(dav), punts(punts), preu(preu){}
-        */
+
         //controlar també el nombre dels jugadors des de la classe? 
         //-> return false quan ja no pots posar més defenses, etc.
         void afegir_jugador(Jugador j){
@@ -75,13 +81,6 @@ class Equip {
 
 
 void write_sol(ofstream& fs, Equip E, auto start){
-    //time!
-    /*E.escriu_jugadors("POR", fs);
-    E.escriu_jugadors("def", fs);
-    E.escriu_jugadors("mig", fs);
-    E.escriu_jugadors("dav", fs);
-    fs << "Punts: " << E.punts << endl;
-    fs << "Preu: " << E.preu << endl; */
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
@@ -112,16 +111,21 @@ void write_sol(ofstream& fs, Equip E, auto start){
     fs << "Preu: " << E.preu << endl;
 }
 
+bool ordre0(Jugador j1, Jugador j2){
+    if(j1.punts == j2.punts) return j1.preu < j2.preu;
+    return (j1.punts) > (j2.punts);
+}
+
 bool ordre1(Jugador j1, Jugador j2){
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
-    return (j1.punts*j1.punts / j2.preu) > (j2.punts*j2.punts / j2.preu);
+    return (j1.punts / j2.preu) > (j2.punts / j2.preu);
 }
 
 bool ordre2(Jugador j1, Jugador j2){
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
-    return (j1.punts*0.7/ j2.preu*0.3) > (j2.punts*0.7 / j2.preu*0.3);
+    return (j1.punts*j1.punts/ j2.preu) > (j2.punts*j2.punts / j2.preu);
 }
 
 
@@ -151,18 +155,25 @@ void llegir_jugadors(ifstream& dades_jugadors,
 }
 
 
-void greedy(int Ndef, int Nmig, int Ndav, int T, int J,
-            ifstream& dades_jugadors, ofstream& fitxer_sortida, auto start){
+void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida, auto start){
+
+    //auto& [Npor, Ndef, Nmig, Ndav, T, J] = entrada;
+    int Npor, Ndef, Nmig, Ndav, T, J;
+    Npor = entrada.Npor;
+    Ndef = entrada.Ndef;
+    Nmig = entrada.Nmig;
+    Ndav = entrada.Ndav;
+    J = entrada.J;
+    T = entrada.T;
 
 
     Equip E = Equip();
 
     vector<Jugador> jugadors;
     llegir_jugadors(dades_jugadors, jugadors, J);
-    sort(jugadors.begin(), jugadors.end(), ordre2);
+    sort(jugadors.begin(), jugadors.end(), ordre0);
 
     int preu_restant = T;
-    int Npor = 1;
 
     for(uint i=0; i<jugadors.size() and Npor + Ndef + Nmig + Ndav != 0; i++){
         //sempre tindrem que jugadors[i].preu <= J
@@ -175,35 +186,6 @@ void greedy(int Ndef, int Nmig, int Ndav, int T, int J,
             preu_restant -= j.preu;
         }
     }
-
-    /*
-    for(uint i=0; i<listpor.size() and not por_trobat; ++i){
-        if(listpor[i].preu<=preu_restant){
-            por_trobat = true;
-            preu_restant -= listpor[i].preu;
-            E.afegir_jugador(listpor[i]);
-    }   }
-
-    for(uint i=0; i<listdef.size() and Ndef>0; ++i){
-        if(listdef[i].preu<=preu_restant){
-            Ndef -= 1;
-            preu_restant -= listdef[i].preu;
-            E.afegir_jugador(listdef[i]);
-    }   }
-
-    for(uint i=0; i<listmig.size() and Nmig>0; ++i){
-        if(listmig[i].preu<=preu_restant){
-            Nmig -= 1;
-            preu_restant -= listmig[i].preu;
-            E.afegir_jugador(listmig[i]);
-    }   }
-
-    for(uint i=0; i<listdav.size() and Ndav>0; ++i){
-        if(listdav[i].preu<=preu_restant){
-            Ndav -= 1;
-            preu_restant -= listdav[i].preu;
-            E.afegir_jugador(listdav[i]);
-    }   } */
 
     return write_sol(fitxer_sortida, E, start);
 }
@@ -222,10 +204,10 @@ int main(int argc, char** argv){
     ifstream plantilla(argv[2]);
     ofstream fitxer_sortida(argv[3]);
 
-    int Ndef, Nmig, Ndav, T, J;
-
-    plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
+    Entrada entrada = Entrada(plantilla);
     plantilla.close();
 
-    greedy(Ndef,Nmig,Ndav,T,J,dades_jugadors, fitxer_sortida, start);
+
+
+    greedy(entrada,dades_jugadors, fitxer_sortida, start);
 }
