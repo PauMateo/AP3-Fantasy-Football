@@ -5,8 +5,24 @@
 #include <algorithm>
 #include <dirent.h>
 #include <cstring>
+#include <math.h>
 
 using namespace std;
+
+
+class Entrada {   //Plantilla??
+    public:
+        int Npor = 1;
+        int Ndef;
+        int Nmig;
+        int Ndav;
+        int T;
+        int J;
+
+        Entrada(ifstream& fitxer){
+            fitxer >> Ndef >> Nmig >> Ndav >> T >> J;
+        }
+};
 
 
 class Jugador {
@@ -72,29 +88,17 @@ class Equip {
 };
 
 
-class Tactic {
-    public:
-        uint goal;
-        uint def;
-        uint mid;
-        uint str;
-        Tactic() {}
-        Tactic(uint g, uint d, uint m, uint s):goal(g), def(d), mid(m), str(s) {}
-};
+int PUNTS_TOTALS = 0;
+int punts_avg;
+int preu_avg;
+int n_jugadors = 0;
+int ratio_avg;
+int J_, T_;
 
 void write_sol(ofstream& fs, Equip E, string bench){
-    //time!
 
-    fs << bench << " -->  PUNTS: "<<E.punts<<";   PREU: "<<E.preu<<endl;
+    fs << bench << " : "<<E.punts<<endl;
 
-
-    /*E.escriu_jugadors("POR", fs);
-    E.escriu_jugadors("def", fs);
-    E.escriu_jugadors("mig", fs);
-    E.escriu_jugadors("dav", fs);
-    fs << "Punts: " << E.punts << endl;
-    fs << "Preu: " << E.preu << endl; */
-    /*
     fs << "POR: " << E.por << endl;
     
     bool first = true;
@@ -116,7 +120,19 @@ void write_sol(ofstream& fs, Equip E, string bench){
     }
     fs<<endl;
     fs << "Punts: " << E.punts << endl;
-    fs << "Preu: " << E.preu << endl; */
+    fs << "Preu: " << E.preu << endl;
+    fs << endl;
+}
+
+void write_sol2(ofstream& fs, Equip E, string bench){
+
+    fs << bench << " -->  PUNTS: "<<E.punts<<";   PREU: "<<E.preu<<endl;
+    PUNTS_TOTALS += E.punts;
+}
+
+void write_sol2_cout(ofstream& fs, Equip E, string bench){
+    cout << bench << " -->  PUNTS: "<<E.punts<<";   PREU: "<<E.preu<<endl;
+    PUNTS_TOTALS += E.punts;
 }
 
 bool ordre1(Jugador j1, Jugador j2){
@@ -131,19 +147,40 @@ bool ordre2(Jugador j1, Jugador j2){
 
     //de moment, si no hem triat encara triem en funció del ratio punts^2/preu
     return (j1.punts*j1.punts / j2.preu) > (j2.punts*j2.punts / j2.preu);
+}
 
+bool ordre3(Jugador j1, Jugador j2){
+    if(j1.punts == 0) return false;
+    if(j2.punts == 0) return true;
+    return (pow(j1.punts, 3)/ pow(j1.preu, 2)) > (pow(j2.punts, 3) / pow(j2.preu, 2));
+}
+
+bool ordre4(Jugador j1, Jugador j2){
+    int r1 = j1.punts / j1.preu;
+    int r2 = j2.punts / j2.preu;
+
+    if(r1 > r2 and j1.punts >= punts_avg) return true;
+    if(r1 < r2 and j2.punts >= punts_avg) return false;
+
+    else return j1.punts > j2.punts;
 }
 
 
+bool ordre5(Jugador j1, Jugador j2){
+    if(j1.punts == j2.punts) return j1.preu < j2.preu;
+    int difpunts = j1.punts - j2.punts;
+    int difpreu = j1.preu - j2.preu;
+
+    return difpunts < difpreu;
+}
+
 void llegir_jugadors(ifstream& dades_jugadors,
-                     vector<Jugador>& listpor,
-                     vector<Jugador>& listdef,
-                     vector<Jugador>& listmig,
-                     vector<Jugador>& listdav){
+                     vector<Jugador>& jugadors){
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
 
+    int punts_total=0, preu_total=0;
     while(not dades_jugadors.eof()){
         getline(dades_jugadors, nom, ';');
         getline(dades_jugadors, pos, ';');
@@ -155,68 +192,43 @@ void llegir_jugadors(ifstream& dades_jugadors,
         Jugador j = Jugador(nom,pos,preu,club,punts);
 
         if(nom=="") break;
-    
-        if(pos=="por") listpor.push_back(j);
-        if(pos=="def") listdef.push_back(j);
-        if(pos=="mig") listmig.push_back(j);
-        if(pos=="dav") listdav.push_back(j);
 
-        //cout<<nom<<";"<<pos<<";"<<preu<<";"<<club<<";"<<punts<<endl;
+        n_jugadors += 1;
+        punts_total += punts;
+        preu_total += preu;
+        jugadors.push_back(j);
     }
+
+    punts_avg = punts_total / n_jugadors;
+    preu_avg = preu_total / n_jugadors;
+    ratio_avg = punts_avg / preu_avg; 
 }
 
 
-void greedy(int Ndef, int Nmig, int Ndav, int T, int J,
-            ifstream& dades_jugadors, ofstream& fitxer_sortida, string bench,
-            vector<Jugador> listpor, vector<Jugador>listdef,
-            vector<Jugador>listmig, vector<Jugador> listdav){
-    
+void greedy(vector<Jugador>& jugadors, int Ndef, int Nmig, int Ndav, int T, int J, ifstream& dades_jugadors, ofstream& fitxer_sortida, string bench){
 
     Equip E = Equip();
-    
-    sort(listpor.begin(), listpor.end(), ordre1);
-    sort(listdef.begin(), listdef.end(), ordre1);
-    sort(listmig.begin(), listmig.end(), ordre1);
-    sort(listdav.begin(), listdav.end(), ordre1);
-
+    int Npor = 1;
     int preu_restant = T;
-    bool por_trobat = false;
 
-    for(uint i=0; i<listpor.size() and not por_trobat; ++i){
-        if(listpor[i].preu <=J and listpor[i].preu<=preu_restant){
-            por_trobat = true;
-            preu_restant -= listpor[i].preu;
-            E.afegir_jugador(listpor[i]);
-    }   }
-
-    for(uint i=0; i<listdef.size() and Ndef>0; ++i){
-        if(listdef[i].preu <=J and listdef[i].preu<=preu_restant){
-            Ndef -= 1;
-            preu_restant -= listdef[i].preu;
-            E.afegir_jugador(listdef[i]);
-    }   }
-
-    for(uint i=0; i<listmig.size() and Nmig>0; ++i){
-        if(listmig[i].preu <=J and listmig[i].preu<=preu_restant){
-            Nmig -= 1;
-            preu_restant -= listmig[i].preu;
-            E.afegir_jugador(listmig[i]);
-    }   }
-
-    for(uint i=0; i<listdav.size() and Ndav>0; ++i){
-        if(listdav[i].preu <=J and listdav[i].preu<=preu_restant){
-            Ndav -= 1;
-            preu_restant -= listdav[i].preu;
-            E.afegir_jugador(listdav[i]);
-    }   }
-
-    return write_sol(fitxer_sortida, E, bench);
+    for(uint i=0; i<jugadors.size() and Npor + Ndef + Nmig + Ndav != 0; i++){
+        //sempre tindrem que jugadors[i].preu <= J
+        Jugador j = jugadors[i];
+        if(j.preu <= preu_restant and j.preu <= J){
+            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); Npor -= 1;}
+            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); Ndef -= 1;}
+            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); Nmig -= 1;}
+            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); Ndav -= 1;}            
+            preu_restant -= j.preu;
+        }
+    }
+    return write_sol2_cout(fitxer_sortida, E, bench);
 }
 
 
 int main(int argc, char** argv){
     
-    std::string directorio = "public_benchs/";
+    std::string directorio = "new_benchs/";
     DIR* dir;
     struct dirent* entry;
 
@@ -226,8 +238,9 @@ int main(int argc, char** argv){
     ifstream dades_jugadors(argv[1]);
     ofstream fitxer_sortida(argv[2]);
 
-    vector<Jugador> listpor, listdef, listmig, listdav;
-    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav);
+    vector<Jugador> jugadors;
+    llegir_jugadors(dades_jugadors, jugadors);
+    sort(jugadors.begin(), jugadors.end(), ordre3);
 
     if (dir != nullptr) {
     while ((entry = readdir(dir)) != nullptr) {
@@ -237,8 +250,7 @@ int main(int argc, char** argv){
 
             if (file.is_open()) {
                 file >> Ndef >> Nmig >> Ndav >> T >> J;
-                greedy(Ndef,Nmig,Ndav,T,J,dades_jugadors, fitxer_sortida, string(entry->d_name),
-                listpor, listdef, listmig, listdav);
+                greedy(jugadors,Ndef,Nmig,Ndav,T,J,dades_jugadors, fitxer_sortida, string(entry->d_name));
                 file.close();
             } else {
                 std::cout << "No se pudo abrir el archivo: " << filename << std::endl;
@@ -249,5 +261,6 @@ int main(int argc, char** argv){
     } else {
         std::cout << "No se pudo abrir el directorio." << std::endl;
     }
+    cout << "PUNTS TOTALS: "<<PUNTS_TOTALS<<endl;
     return 0;
 }
