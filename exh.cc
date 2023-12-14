@@ -91,20 +91,13 @@ bool ordre2(Jugador j1, Jugador j2){
 }
 
 
-void write_sol(string fitxer_sortida_nom, Equip E, auto start){
+void write_sol(ofstream& fs, Equip E, auto start){
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
-    ofstream fs(fitxer_sortida_nom);
 
-    /*E.escriu_jugadors("POR", fs);
-    E.escriu_jugadors("def", fs);
-    E.escriu_jugadors("mig", fs);
-    E.escriu_jugadors("dav", fs);
-    fs << "Punts: " << E.punts << endl;
-    fs << "Preu: " << E.preu << endl; */
+    fs <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
 
-    fs <<setprecision( 1 )<< duration.count() / 1000 << endl;
     fs << "POR: " << E.por << endl;
     
     bool first = true;
@@ -127,8 +120,6 @@ void write_sol(string fitxer_sortida_nom, Equip E, auto start){
     fs<<endl;
     fs << "Punts: " << E.punts << endl;
     fs << "Preu: " << E.preu << endl;
-
-    fs.close();
 }
 
 
@@ -195,11 +186,12 @@ void llegir_jugadors(ifstream& dades_jugadors,
 }
 
 
-void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
-            string fitxer_sortida, auto start){
+void exh_search_rec(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
+            ofstream& fitxer_sortida, auto start){
     if (Npor + Ndef + Nmig + Ndav == 0 and E.punts > E_millor.punts){
         E_millor = E;
-        return write_sol(fitxer_sortida, E, start);
+        cout << E.por << endl;
+        return write_sol(fitxer_sortida, E_millor, start);
     }
 
     if( T<0 or (E.punts + Npor*maxPuntspor + Ndef*maxPuntsdef + Nmig*maxPuntsmig + Ndav*maxPuntsdav < E_millor.punts)) return;
@@ -217,7 +209,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     }}}
 
     if(Ndef > 0){
-        for(uint i=0; i<listdef.size(); i++){
+        for(uint i=listdef.size()-Ndef; i<listdef.size(); i++){
             Jugador j = listdef[i];
             if(j.preu <= T and not Udef[i]){
                 E.def[Ndef-1] = j.nom;
@@ -231,7 +223,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     }}}
 
     if(Nmig > 0){
-        for(uint i=0; i<listmig.size(); i++){
+        for(uint i=listmig.size()-Nmig; i<listmig.size(); i++){
             Jugador j = listmig[i];
             if(j.preu <= T and not Umig[i]){
                 E.mig[Nmig-1] = j.nom;
@@ -245,7 +237,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
     }}}
 
     if(Ndav > 0){
-        for(uint i=0; i<listdav.size(); i++){
+        for(uint i=listdav.size()-Ndav; i<listdav.size(); i++){
             Jugador j = listdav[i];
             if(j.preu <= T and not Udav[i]){
                 E.dav[Ndav-1] = j.nom;
@@ -261,7 +253,7 @@ void exh_search_rec(Equip E, int Npor, int Ndef, int Nmig, int Ndav, int T, int 
 
 
 void exh_search(int Ndef, int Nmig, int Ndav, int T, int J,
-            string fitxer_sortida, auto start){
+            ofstream& fitxer_sortida, auto start){
     Equip E = Equip(Ndef, Nmig, Ndav);
     E_millor = Equip(Ndef, Nmig, Ndav);
     return exh_search_rec(E, 1, Ndef, Nmig, Ndav, T, J, fitxer_sortida, start);
@@ -277,8 +269,8 @@ int main(int argc, char** argv){
     auto start = std::chrono::system_clock::now();
 
     ifstream dades_jugadors(argv[1]);
-    ifstream plantilla(argv[2]);
-    string fitxer_sortida = argv[3];
+    ofstream fitxer_sortida(argv[2]);
+    ifstream plantilla(argv[3]);
     int Ndef, Nmig, Ndav, T, J;
 
     plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
@@ -289,4 +281,5 @@ int main(int argc, char** argv){
 
     exh_search(Ndef,Nmig,Ndav,T,J, fitxer_sortida, start);
 
+    cout<< E_millor.por << endl;
 }
