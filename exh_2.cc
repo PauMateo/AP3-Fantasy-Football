@@ -75,7 +75,7 @@ class Equip {
 
 
 vector<Jugador> listpor, listdef, listmig, listdav;
-int millors_punts = 0;
+int millors_punts = -1;
 int Npor = 1, Ndef, Nmig, Ndav, T, J;
 vector<Jugador> bestpor, bestdef, bestmig, bestdav;
 vector<bool> Upor, Udef, Umig, Udav;
@@ -105,11 +105,12 @@ bool ordre3(Jugador j1, Jugador j2){
 }
 
 
-void write_sol(ofstream& fs, Equip E, auto start){
+void write_sol(string fsname, Equip E, auto start){
 
+    ofstream fs(fsname);
     auto end = std::chrono::system_clock::now();
-    std::chrono::duration<float,std::milli> duration = end - start;
-
+    chrono::duration<float, milli> duration = end - start;
+    
     fs <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
 
     fs << "POR: " << E.por << endl;
@@ -134,6 +135,63 @@ void write_sol(ofstream& fs, Equip E, auto start){
     fs<<endl;
     fs << "Punts: " << E.punts << endl;
     fs << "Preu: " << E.preu << endl;
+
+    fs.close();
+}
+
+void write_sol_cout(string fsname, Equip E, auto start){
+
+    auto end = std::chrono::system_clock::now();
+    chrono::duration<float, milli> duration = end - start;
+    
+    cout <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
+
+    cout << "POR: " << E.por << endl;
+    
+    bool first = true;
+    for (string nom : E.def){
+        if(first){first=false;cout<<"DEF: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.mig){
+        if(first){first=false;cout<<"MIG: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.dav){
+        if(first){first=false;cout<<"DAV: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    cout << "Punts: " << E.punts << endl;
+    cout << "Preu: " << E.preu << endl;
+}
+
+void write_perm_cout(string fsname, Equip E, auto start){
+
+    cout << "POR: " << E.por << endl;
+    
+    bool first = true;
+    for (string nom : E.def){
+        if(first){first=false;cout<<"DEF: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.mig){
+        if(first){first=false;cout<<"MIG: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.dav){
+        if(first){first=false;cout<<"DAV: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl<<endl;
 }
 
 
@@ -154,40 +212,8 @@ bool JugInEquip(Jugador& j, Equip& E){
 }
 
 
-bool prune(int porres, int defres, int migres, int davres){  //retorna true si podem la branca del backtracking
-    int punts = 0;
 
-    for(int i=0; i<porres; i++){
-        if(not JugInEquip(bestpor[i], E)) punts += bestpor[i].punts;
-        else i-=1;
-    }
-
-    for(int i=0; i<defres; i++){
-        if(not JugInEquip(bestdef[i], E)) punts += bestdef[i].punts;
-        else i-=1;
-    }
-
-    for(int i=0; i<migres; i++){
-        if(not JugInEquip(bestmig[i], E)) punts += bestmig[i].punts;
-        else i-=1;
-    }
-
-    for(int i=0; i<davres; i++){
-        if(not JugInEquip(bestdav[i], E)) punts += bestdav[i].punts;
-        else i-=1;
-    }
-
-    if(punts < millors_punts) return true; //si que podem
-    return false; //no podem
-}
-
-
-void llegir_jugadors(ifstream& dades_jugadors,
-                     vector<Jugador>& listpor,
-                     vector<Jugador>& listdef,
-                     vector<Jugador>& listmig,
-                     vector<Jugador>& listdav,
-                     int J){
+void llegir_jugadors(ifstream& dades_jugadors){
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
@@ -202,9 +228,9 @@ void llegir_jugadors(ifstream& dades_jugadors,
         getline(dades_jugadors, club, ';');
         dades_jugadors >> punts;
         getline(dades_jugadors, aux2);
-        Jugador j = Jugador(nom,pos,preu,club,punts);
 
         if(nom=="") break;
+        Jugador j = Jugador(nom,pos,preu,club,punts);
 
         if(preu <= J){
             if(pos=="por") {
@@ -225,13 +251,8 @@ void llegir_jugadors(ifstream& dades_jugadors,
                 Ndavtotal += 1;
             }
         }
-        //cout<<nom<<";"<<pos<<";"<<preu<<";"<<club<<";"<<punts<<endl;
     }
 
-    // Upor = vector<bool>(Nportotal); realment no cal
-    Udef = vector<bool>(Ndeftotal);
-    Umig = vector<bool>(Ndeftotal);
-    Udav = vector<bool>(Ndavtotal);
 
 
     std::sort(listpor.begin(), listpor.end(), ordre0);
@@ -250,78 +271,109 @@ void llegir_jugadors(ifstream& dades_jugadors,
 }
 
 
-void exh_search_rec(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, int T, int J,
-            ofstream& fitxer_sortida, auto start){
+bool prune(int porres, int defres, int migres, int davres){  //retorna true si podem la branca del backtracking
+    /*
+    donats el nombre de defenses que ens queden per posar a l'equip (defres), 
+    el nombre de migcampistes, i el nombre de davanters, podem aquest equip si
+    tot i que omplim les posicinos que ens queden per omplir amb els millors 
+    jugadors (els que tene més punts, sense ni tan sols tenir en compte el preu)
+    no aconseguiríem obtenir més punts que el millor equip que hem trobat fins ara.
+    */
+    int punts = 0;
 
-    if (Npor + Ndef + Nmig + Ndav == 0 and E.punts > millors_punts){
-        millors_punts = E.punts;
-        cout << E.por << endl;
-        return write_sol(fitxer_sortida, E, start);
+    for(int i=0; i<porres; i++) punts += bestpor[i].punts;
+
+    for(int i=0; i<defres; i++) punts += bestdef[i].punts;
+
+    for(int i=0; i<migres; i++) punts += bestmig[i].punts;
+
+    for(int i=0; i<davres; i++) punts += bestdav[i].punts;
+
+    if(punts + E.punts < millors_punts) {return true; cout<<"."<<endl;} //si que podem
+    return false; //no podem
+}
+
+
+
+/*
+idxdef és la posició de defensa que de defensa; ídem amb idxpor, idxmig, idxdav
+
+*/
+void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
+                int kpor, int kdef, int kmig, int kdav,
+                int preu_restant, string fitxer_sortida, auto start){
+    
+    /*if(idxpor==Npor and idxdef==Ndef and idxmig==Nmig and idxdav==Ndav){
+        cout << "check" << endl;
+        return write_perm_cout(fitxer_sortida, E, start);
+    }*/
+
+    if(idxpor==Npor and idxdef>=Ndef and idxmig>=Nmig and idxdav>=Ndav){
+        if(E.punts > millors_punts){
+            millors_punts = E.punts;
+            return write_sol_cout(fitxer_sortida, E, start);
+        }
+        return;
     }
 
-    if( T<0 or prune(Npor, Ndef, Nmig, Ndav)) return;
+    if(prune(Npor, Ndef, Nmig, Ndav)) return;
 
-
-    if(Npor > 0){
-        for(Jugador j : listpor){
-            if(j.preu <= T){
+    if(idxpor<1){
+        for(int i = 0; i<int(listpor.size()); i++){
+            Jugador j = listpor[i];
+            if(j.preu <= preu_restant){
                 E.por = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                exh_search_rec(E, Npor-1, Ndef, Nmig, Ndav, T-j.preu, J, fitxer_sortida, start);
+                exh_search(E, idxpor+1, idxdef, idxmig, idxdav, kpor, kdef, kmig, kdav, preu_restant-j.preu, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
     }}}
 
-    if(Ndef > 0){
-        for(uint i = E.def.size()-Ndef; i<listdef.size(); i++){
-            cout << i << endl;
+    else if(idxdef<Ndef){ //si hem posat tots els porters, comencem a posar defenses
+        //i es index del germà
+        //idxdef es la profunditat de la crida
+        for(int i = kdef; i<int(listdef.size()); i++){
             Jugador j = listdef[i];
-            if(j.preu <= T and not Udef[i]){
-                E.def[Ndef-1] = j.nom;
+            if(j.preu <= preu_restant){
+                E.def[idxdef] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                Udef[i] = true;
-                exh_search_rec(E, Npor, Ndef-1, Nmig, Ndav, T-j.preu, J, fitxer_sortida, start);
+                exh_search(E, idxpor, idxdef+1, idxmig, idxdav, kpor, i+1, kmig, kdav, preu_restant-j.preu, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
-                Udef[i] = false;
     }}}
 
-    if(Nmig > 0){
-        for(uint i = E.mig.size()-Nmig; i<listmig.size(); i++){
+
+    else if(idxmig < Nmig){ //si hem posat tots els defenses, comencem a posar migcampistes
+            for(int i = kmig; i<int(listmig.size()); i++){
             Jugador j = listmig[i];
-            if(j.preu <= T and not Umig[i]){
-                E.mig[Nmig-1] = j.nom;
+            if(j.preu <= preu_restant){
+                E.mig[idxmig] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                Umig[i] = true;
-                exh_search_rec(E, Npor, Ndef, Nmig-1, Ndav, T-j.preu, J, fitxer_sortida, start);
+                exh_search(E, idxpor, idxdef, idxmig+1, idxdav, kpor, kdef, i+1, kdav, preu_restant-j.preu, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
-                Umig[i] = false;
     }}}
-
-    if(Ndav > 0){
-        for(uint i = E.dav.size()-Ndav; i<listdav.size(); i++){
+    
+    else if(idxdav < Ndav){ //quan hem posat tos els migcampistes, comencem a posar davanters
+        for(int i = kdav; i<int(listdav.size()); i++){
             Jugador j = listdav[i];
-            if(j.preu <= T and not Udav[i]){
-                E.dav[Ndav-1] = j.nom;
+            if(j.preu <= preu_restant){
+                E.dav[idxdav] = j.nom;
                 E.punts += j.punts;
                 E.preu += j.preu;
-                Udav[i] = true;
-                exh_search_rec(E, Npor, Ndef, Nmig, Ndav-1, T-j.preu, J, fitxer_sortida, start);
+                exh_search(E, idxpor, idxdef, idxmig, idxdav+1, kpor, kdef, kmig, i+1, preu_restant-j.preu, fitxer_sortida, start);
                 E.punts -= j.punts;
                 E.preu -= j.preu;
-                Udav[i] = false;
     }}}
 }
 
 
-void exh_search(int Ndef, int Nmig, int Ndav, int T, int J,
-            ofstream& fitxer_sortida, auto start){
+void exh_search(string fitxer_sortida, auto start){
     E = Equip(Ndef, Nmig, Ndav);
-    return exh_search_rec(E, 1, Ndef, Nmig, Ndav, T, J, fitxer_sortida, start);
+    return exh_search(E, 0, 0, 0, 0, 0, 0, 0, 0, T, fitxer_sortida, start);
 }
 
 
@@ -334,14 +386,13 @@ int main(int argc, char** argv){
     auto start = std::chrono::system_clock::now();
 
     ifstream dades_jugadors(argv[1]);
-    ofstream fitxer_sortida(argv[2]);
     ifstream plantilla(argv[3]);
 
     plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
+    cout << Npor << " "<<Ndef <<" "<< Nmig <<" "<< Ndav << "  "<<T << " "<<J<<endl;
     plantilla.close();
 
-    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav, J);
-
-
-    exh_search(Ndef,Nmig,Ndav,T,J, fitxer_sortida, start);
+    llegir_jugadors(dades_jugadors);
+    
+    exh_search(argv[2], start);
 }
