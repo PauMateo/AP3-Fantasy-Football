@@ -77,7 +77,7 @@ class Equip {
 vector<Jugador> listpor, listdef, listmig, listdav;
 int millors_punts = -1;
 int Npor = 1, Ndef, Nmig, Ndav, T, J;
-vector<Jugador> bestpor, bestdef, bestmig, bestdav;
+vector<int> bestpor, bestdef, bestmig, bestdav;  //punts dels jugadors amb més punts
 vector<bool> Upor, Udef, Umig, Udav;
 Equip E = Equip(0, 0, 0);
 
@@ -212,7 +212,6 @@ bool JugInEquip(Jugador& j, Equip& E){
 }
 
 
-
 void llegir_jugadors(ifstream& dades_jugadors){
     string nom, pos, club, aux2;
     int preu, punts;
@@ -254,15 +253,34 @@ void llegir_jugadors(ifstream& dades_jugadors){
     }
 
 
-
     std::sort(listpor.begin(), listpor.end(), ordre0);
     std::sort(listdef.begin(), listdef.end(), ordre0);
     std::sort(listmig.begin(), listmig.end(), ordre0);
     std::sort(listdav.begin(), listdav.end(), ordre0);
-    for(int i=0; i<Npor; i++) bestpor.push_back(listpor[i]);
-    for(int i=0; i<Ndef; i++) bestdef.push_back(listdef[i]);
-    for(int i=0; i<Nmig; i++) bestmig.push_back(listmig[i]);
-    for(int i=0; i<Ndav; i++) bestdav.push_back(listdav[i]);
+    bestpor = vector<int>(Npor, 0);
+    bestdef = vector<int>(Ndef, 0);
+    bestmig = vector<int>(Nmig, 0);
+    bestdav = vector<int>(Ndav, 0);
+    int p = 0;
+    for(int i=0; i<Npor; i++){
+        p += listpor[i+1].punts;
+        bestpor.push_back(p);
+    }
+    p = 0;
+    for(int i=0; i<Ndef; i++){
+        p += listdef[i+1].punts;
+        bestdef.push_back(p);
+    }
+    p = 0;
+    for(int i=0; i<Nmig; i++){
+        p += listmig[i+1].punts;
+        bestmig.push_back(p);
+    }
+    p = 0;
+    for(int i=0; i<Ndav; i++){
+        p += listdav[i+1].punts;
+        bestdav.push_back(p);
+    }
 
     std::sort(listpor.begin(), listpor.end(), ordre3);
     std::sort(listdef.begin(), listdef.end(), ordre3);
@@ -274,20 +292,16 @@ void llegir_jugadors(ifstream& dades_jugadors){
 bool prune(int porres, int defres, int migres, int davres){  //retorna true si podem la branca del backtracking
     /*
     donats el nombre de defenses que ens queden per posar a l'equip (defres), 
-    el nombre de migcampistes, i el nombre de davanters, podem aquest equip si
-    tot i que omplim les posicinos que ens queden per omplir amb els millors 
-    jugadors (els que tene més punts, sense ni tan sols tenir en compte el preu)
+    el nombre de migcampistes, i el nombre de davanters... podem la construcció 
+    d'aquest equip si tot i que omplim les posicinos que ens queden per omplir amb
+    els millors jugadors (els que tene més punts, sense ni tan sols tenir en compte el preu)
     no aconseguiríem obtenir més punts que el millor equip que hem trobat fins ara.
     */
     int punts = 0;
-
-    for(int i=0; i<porres; i++) punts += bestpor[i].punts;
-
-    for(int i=0; i<defres; i++) punts += bestdef[i].punts;
-
-    for(int i=0; i<migres; i++) punts += bestmig[i].punts;
-
-    for(int i=0; i<davres; i++) punts += bestdav[i].punts;
+    punts += bestpor[porres];
+    punts += bestdef[defres];
+    punts += bestmig[migres];
+    punts += bestdav[davres];
 
     if(punts + E.punts < millors_punts) {return true; cout<<"."<<endl;} //si que podem
     return false; //no podem
@@ -316,7 +330,7 @@ void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
         return;
     }
 
-    if(prune(Npor, Ndef, Nmig, Ndav)) return;
+    //if(prune(Npor-idxpor, Ndef-idxdef, Nmig-idxmig, Ndav-idxdav)) return;
 
     if(idxpor<1){
         for(int i = 0; i<int(listpor.size()); i++){
