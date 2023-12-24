@@ -237,7 +237,6 @@ void llegir_jugadors(ifstream& dades_jugadors){
                 Nportotal += 1;
             }
             if(pos=="def") {
-
                 listdef.push_back(j);
                 Ndeftotal += 1;
             }
@@ -257,30 +256,51 @@ void llegir_jugadors(ifstream& dades_jugadors){
     std::sort(listdef.begin(), listdef.end(), ordre0);
     std::sort(listmig.begin(), listmig.end(), ordre0);
     std::sort(listdav.begin(), listdav.end(), ordre0);
-    bestpor = vector<int>(Npor, 0);
-    bestdef = vector<int>(Ndef, 0);
-    bestmig = vector<int>(Nmig, 0);
-    bestdav = vector<int>(Ndav, 0);
+
+    cout << "PORTERS     "<<"DEFENSES     "<<"MIGCAMP     "<<"DAV"<<endl;
+    for(int i=0; i<7; i++){
+        cout << listpor[i].nom<<" "<<listpor[i].punts<<"  ";
+        cout << listdef[i].nom<<" "<<listdef[i].punts<<"  ";
+        cout << listmig[i].nom<<" "<<listmig[i].punts<<"  ";
+        cout << listdav[i].nom<<" "<<listdav[i].punts<<"  ";
+        cout << endl;
+    }
+    cout<<endl<<endl;
+
+    bestpor = vector<int>(Npor+1, 0);
+    bestdef = vector<int>(Ndef+1, 0);
+    bestmig = vector<int>(Nmig+1, 0);
+    bestdav = vector<int>(Ndav+1, 0);
     int p = 0;
     for(int i=0; i<Npor; i++){
-        p += listpor[i+1].punts;
-        bestpor.push_back(p);
+        p += listpor[i].punts;
+        bestpor[i+1] = p;
     }
     p = 0;
     for(int i=0; i<Ndef; i++){
-        p += listdef[i+1].punts;
-        bestdef.push_back(p);
+        p += listdef[i].punts;
+        bestdef[i+1] = p;
     }
     p = 0;
     for(int i=0; i<Nmig; i++){
-        p += listmig[i+1].punts;
-        bestmig.push_back(p);
+        p += listmig[i].punts;
+        bestmig[i+1] = p;
     }
     p = 0;
     for(int i=0; i<Ndav; i++){
-        p += listdav[i+1].punts;
-        bestdav.push_back(p);
+        p += listdav[i].punts;
+        bestdav[i+1] = p;
     }
+
+    cout << bestpor[0] << " "<<bestpor[1]<< endl;
+    for(uint i=0; i<bestdef.size();i++) cout<<bestdef[i]<<" ";
+    cout <<endl;
+    for(uint i=0; i<bestmig.size();i++) cout<<bestmig[i]<<" ";
+    cout <<endl;
+    for(uint i=0; i<bestdav.size();i++) cout<<bestdav[i]<<" ";
+    cout <<endl;
+
+
 
     std::sort(listpor.begin(), listpor.end(), ordre3);
     std::sort(listdef.begin(), listdef.end(), ordre3);
@@ -330,7 +350,7 @@ void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
         return;
     }
 
-    //if(prune(Npor-idxpor, Ndef-idxdef, Nmig-idxmig, Ndav-idxdav)) return;
+    if(prune(Npor-idxpor, Ndef-idxdef, Nmig-idxmig, Ndav-idxdav)) return;
 
     if(idxpor<1){
         for(int i = 0; i<int(listpor.size()); i++){
