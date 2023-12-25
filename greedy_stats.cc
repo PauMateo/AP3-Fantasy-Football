@@ -152,7 +152,7 @@ bool ordre2(Jugador j1, Jugador j2){
 bool ordre3(Jugador j1, Jugador j2){
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
-    return (pow(j1.punts, 3)/ pow(j1.preu, 2)) > (pow(j2.punts, 3) / pow(j2.preu, 2));
+    return (pow(j1.punts, 3)/ pow(j1.preu, 1)) > (pow(j2.punts, 3) / pow(j2.preu, 1));
 }
 
 bool ordre4(Jugador j1, Jugador j2){
@@ -192,10 +192,6 @@ void llegir_jugadors(ifstream& dades_jugadors,
         Jugador j = Jugador(nom,pos,preu,club,punts);
 
         if(nom=="") break;
-
-        n_jugadors += 1;
-        punts_total += punts;
-        preu_total += preu;
         jugadors.push_back(j);
     }
 
@@ -215,14 +211,14 @@ void greedy(vector<Jugador>& jugadors, int Ndef, int Nmig, int Ndav, int T, int 
         //sempre tindrem que jugadors[i].preu <= J
         Jugador j = jugadors[i];
         if(j.preu <= preu_restant and j.preu <= J){
-            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); Npor -= 1;}
-            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); Ndef -= 1;}
-            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); Nmig -= 1;}
-            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); Ndav -= 1;}            
-            preu_restant -= j.preu;
+            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); --Npor; preu_restant -= j.preu;}
+            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); --Ndef; preu_restant -= j.preu;}
+            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); --Nmig; preu_restant -= j.preu;}
+            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); --Ndav; preu_restant -= j.preu;}            
+            
         }
     }
-    return write_sol2_cout(fitxer_sortida, E, bench);
+    return write_sol(fitxer_sortida, E, bench);
 }
 
 
