@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iomanip>
+#include <math.h>
 
 using namespace std;
 
@@ -128,6 +129,12 @@ bool ordre2(Jugador j1, Jugador j2){
     return (j1.punts*j1.punts/ j2.preu) > (j2.punts*j2.punts / j2.preu);
 }
 
+bool ordre3(Jugador j1, Jugador j2){
+    if(j1.punts == 0) return false;
+    if(j2.punts == 0) return true;
+    return (pow(j1.punts, 3)/ pow(j1.preu, 1)) > (pow(j2.punts, 3) / pow(j2.preu, 1));
+}
+
 
 void llegir_jugadors(ifstream& dades_jugadors,
                      vector<Jugador>& jugadors,
@@ -171,7 +178,9 @@ void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida,
 
     vector<Jugador> jugadors;
     llegir_jugadors(dades_jugadors, jugadors, J);
-    sort(jugadors.begin(), jugadors.end(), ordre0);
+    sort(jugadors.begin(), jugadors.end(), ordre3);
+
+    //for(Jugador j:jugadors) cout << j.nom << "  " << j.punts << endl;
 
     int preu_restant = T;
 
@@ -179,11 +188,11 @@ void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida,
         //sempre tindrem que jugadors[i].preu <= J
         Jugador j = jugadors[i];
         if(j.preu <= preu_restant){
-            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); Npor -= 1;}
-            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); Ndef -= 1;}
-            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); Nmig -= 1;}
-            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); Ndav -= 1;}            
-            preu_restant -= j.preu;
+            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); --Npor; preu_restant -= j.preu;}
+            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); --Ndef; preu_restant -= j.preu;}
+            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); --Nmig; preu_restant -= j.preu;}
+            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); --Ndav; preu_restant -= j.preu;}            
+            
         }
     }
 
@@ -206,7 +215,6 @@ int main(int argc, char** argv){
 
     Entrada entrada = Entrada(plantilla);
     plantilla.close();
-
 
 
     greedy(entrada,dades_jugadors, fitxer_sortida, start);
