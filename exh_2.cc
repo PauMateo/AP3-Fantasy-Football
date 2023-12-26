@@ -212,7 +212,7 @@ void llegir_jugadors(ifstream& dades_jugadors){
         if(nom=="") break;
         Jugador j = Jugador(nom,pos,preu,club,punts);
 
-        if(preu <= J){
+        if((preu <= J) and ( (preu>0 and punts>0) or (punts==0 and preu==0) )){
             if(pos=="por") {
                 listpor.push_back(j);
                 Nportotal += 1;
