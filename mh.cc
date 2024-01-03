@@ -296,11 +296,11 @@ void simulated_annealing(Equip& E, vector<Jugador>& listdav,  vector<Jugador>& l
         int fs = s.punts;
         int fs2 = s2.punts;
 
-        if (fs2 > fs) {
+        if (s.punts > millors_punts) {write_sol(fitxer_sortida, E, start); millors_punts = s.punts;}
+        if (s2.punts > s.punts) {
             s = s2;
             equip = equip2;
             i = 0;
-            write_sol(fitxer_sortida, E, start);
         }
         else{
             if (randomValue < 0.3) s = s2;
