@@ -10,7 +10,7 @@
 using namespace std;
 
 
-class Entrada {   //Plantilla??
+class Entrada {
     public:
         int Npor = 1;
         int Ndef;
@@ -51,8 +51,7 @@ class Equip {
             por(""), def(vector<string>()), mig(vector<string>()),
             dav(vector<string>()), punts(0), preu(0){}
 
-        //controlar també el nombre dels jugadors des de la classe? 
-        //-> return false quan ja no pots posar més defenses, etc.
+
         void afegir_jugador(Jugador j){
             if(j.pos=="por") por = j.nom;
             else if(j.pos=="def") def.push_back(j.nom);
@@ -61,22 +60,6 @@ class Equip {
             punts += j.punts;
             preu += j.preu;
         }
-
-        void escriu_jugadors(string pos, ofstream& fs){
-            bool first = true;
-            vector<string> *x = nullptr;
-            if (pos=="POR"){fs << "POR: " << por;}
-            else{
-                if (pos == "DEF") x = &def;
-                if (pos == "MIG") x = &mig;
-                if (pos == "DAV") x = &dav;
-                fs << pos;
-                for(string n : *x){
-                        if(first) {fs << n ; first=false;}
-                        else fs << n <<";" ;
-            }}
-            fs << endl;
-        }
 };
 
 
@@ -84,9 +67,8 @@ class Equip {
 void write_sol(ofstream& fs, Equip E, auto start){
 
     auto end = std::chrono::system_clock::now();
-    std::chrono::duration<float,std::milli> duration = end - start;
-
-    fs <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
+    std::chrono::duration<double> duration = end - start;
+    fs <<fixed<<setprecision(1)<< duration.count() / 1000 << endl;
 
     fs << "POR: " << E.por << endl;
     
@@ -112,27 +94,11 @@ void write_sol(ofstream& fs, Equip E, auto start){
     fs << "Preu: " << E.preu << endl;
 }
 
-bool ordre0(Jugador j1, Jugador j2){
-    if(j1.punts == j2.punts) return j1.preu < j2.preu;
-    return (j1.punts) > (j2.punts);
-}
 
-bool ordre1(Jugador j1, Jugador j2){
+bool ordre(Jugador j1, Jugador j2){
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
-    return (j1.punts / j2.preu) > (j2.punts / j2.preu);
-}
-
-bool ordre2(Jugador j1, Jugador j2){
-    if(j1.punts == 0) return false;
-    if(j2.punts == 0) return true;
-    return (j1.punts*j1.punts/ j2.preu) > (j2.punts*j2.punts / j2.preu);
-}
-
-bool ordre3(Jugador j1, Jugador j2){
-    if(j1.punts == 0) return false;
-    if(j2.punts == 0) return true;
-    return (pow(j1.punts, 3)/ pow(j1.preu, 1)) > (pow(j2.punts, 3) / pow(j2.preu, 1));
+    return (pow(j1.punts, 3)/ j1.preu) > (pow(j2.punts, 3) / j2.preu);
 }
 
 
@@ -164,7 +130,6 @@ void llegir_jugadors(ifstream& dades_jugadors,
 
 void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida, auto start){
 
-    //auto& [Npor, Ndef, Nmig, Ndav, T, J] = entrada;
     int Npor, Ndef, Nmig, Ndav, T, J;
     Npor = entrada.Npor;
     Ndef = entrada.Ndef;
@@ -178,9 +143,9 @@ void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida,
 
     vector<Jugador> jugadors;
     llegir_jugadors(dades_jugadors, jugadors, J);
-    sort(jugadors.begin(), jugadors.end(), ordre3);
+    //ordenem els jugadors amb el ratio punts^3 / preu
+    sort(jugadors.begin(), jugadors.end(), ordre);
 
-    //for(Jugador j:jugadors) cout << j.nom << "  " << j.punts << endl;
 
     int preu_restant = T;
 
@@ -195,16 +160,15 @@ void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida,
             
         }
     }
-
     return write_sol(fitxer_sortida, E, start);
 }
 
 
 int main(int argc, char** argv){
     if (argc != 4) {
-    cerr << "Syntax: " << argv[0] << " data_base.txt" <<
-            " bench.txt" << " output.txt" << endl;
-    exit(1);
+        cerr << "Syntax: " << argv[0] << " data_base.txt" <<
+                " bench.txt" << " output.txt" << endl;
+        exit(1);
     }
 
     auto start = std::chrono::system_clock::now();
