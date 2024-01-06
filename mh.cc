@@ -21,7 +21,6 @@ class Jugador {
 
         Jugador(const string& n, const string& pos, int pr, const string& c, int p):
             nom(n), pos(pos), preu(pr), club(c), punts(p){}
-
 };
 
 
@@ -49,6 +48,7 @@ class Equip {
 
         void canviar_jugador(Jugador j, Jugador j2){
             if (j2.pos=="por") por = j2.nom;
+
             else if(j2.pos=="def"){
                 for (uint i=0; i < def.size(); i++){
                     if (def[i] == j.nom) def[i] = j2.nom;
@@ -64,26 +64,12 @@ class Equip {
                     if (dav[i] == j.nom) dav[i] = j2.nom;
                 }
             }
-
-        }
-
-        void escriu_jugadors(string pos, ofstream& fs){
-            bool first = true;
-            vector<string> *x = nullptr;
-            if (pos=="POR"){fs << "POR: " << por;}
-            else{
-                if (pos == "DEF") x = &def;
-                if (pos == "MIG") x = &mig;
-                if (pos == "DAV") x = &dav;
-                fs << pos;
-                for(string n : *x){
-                        if(first) {fs << n ; first=false;}
-                        else fs << n <<";" ;
-            }}
-            fs << endl;
+            punts -= j.punts;
+            preu -= j.preu;
+            punts += j2.punts;
+            preu += j2.preu;
         }
 };
-
 
 
 vector<Jugador> listpor, listdef, listmig, listdav;
@@ -91,8 +77,6 @@ vector<Jugador> jugadors;
 vector<Jugador> equip; //jugadors de l'equip actual ordenats de manera aleatòria
 //vector<Jugador> porcand, defcand, migcand, davcand;   -> fer-ho amb variables globals o fer-les locals dins de construir_sol (d'aquesta manera podem fer diferents randomized solutions amb diferents n's a diferents temps de l'algoritme)
 int millors_punts = 0;
-int maxPuntspor=0, maxPuntsdef=0, maxPuntsmig=0, maxPuntsdav=0;
-vector<bool> Upor, Udef, Umig, Udav;
 
 bool ordre0(Jugador j1, Jugador j2){
     if(j1.punts == j2.punts) return j1.preu < j2.preu;
@@ -118,8 +102,8 @@ bool ordre3(Jugador j1, Jugador j2){
 }
 
 
-void write_sol(ofstream& fs, Equip E, auto start){
-
+void write_sol(string sortida, Equip E, auto start){
+    ofstream fs(sortida);
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
 
@@ -147,20 +131,71 @@ void write_sol(ofstream& fs, Equip E, auto start){
     fs<<endl;
     fs << "Punts: " << E.punts << endl;
     fs << "Preu: " << E.preu << endl;
+    fs.close();
+}   
+
+void write_sol_cout(string sortida, Equip E, auto start){
+    ofstream fs(sortida);
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<float,std::milli> duration = end - start;
+
+    cout <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
+
+    cout << "POR: " << E.por << endl;
+    
+    bool first = true;
+    for (string nom : E.def){
+        if(first){first=false;cout<<"DEF: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.mig){
+        if(first){first=false;cout<<"MIG: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.dav){
+        if(first){first=false;cout<<"DAV: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    cout << "Punts: " << E.punts << endl;
+    cout << "Preu: " << E.preu << endl;
+    fs.close();
+}
+
+void write_sol_cout(Equip E){
+    cout << "POR: " << E.por << endl;
+    
+    bool first = true;
+    for (string nom : E.def){
+        if(first){first=false;cout<<"DEF: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.mig){
+        if(first){first=false;cout<<"MIG: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    first = true;
+    for (string nom : E.dav){
+        if(first){first=false;cout<<"DAV: "<<nom;}
+        else cout<<";"<<nom;
+    }
+    cout<<endl;
+    cout << "Punts: " << E.punts << endl;
+    cout << "Preu: " << E.preu << endl;
 }
 
 
-void llegir_jugadors(ifstream& dades_jugadors,
-                     vector<Jugador>& listpor,
-                     vector<Jugador>& listdef,
-                     vector<Jugador>& listmig,
-                     vector<Jugador>& listdav,
-                     int J){
+void llegir_jugadors(ifstream& dades_jugadors, int J){
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
-
-    int Nportotal=0, Ndeftotal=0, Nmigtotal=0, Ndavtotal=0;
 
     while(not dades_jugadors.eof()){
         getline(dades_jugadors, nom, ';');
@@ -170,34 +205,26 @@ void llegir_jugadors(ifstream& dades_jugadors,
         getline(dades_jugadors, club, ';');
         dades_jugadors >> punts;
         getline(dades_jugadors, aux2);
-        Jugador j = Jugador(nom,pos,preu,club,punts);
 
         if(nom=="") break;
+        Jugador j = Jugador(nom,pos,preu,club,punts);
 
 
-        if ((preu <= J) and (preu > 0 and punts > 0) or (punts==0 and preu==0)) {
+        if ((preu <= J) and ( (preu > 0 and punts > 0) or (punts==0 and preu==0))){
             jugadors.push_back(j);
 
-
+            cout << j.nom << endl;
             if(pos=="por") {
-                maxPuntspor = max(maxPuntspor, j.punts);
                 listpor.push_back(j);
-                Nportotal += 1;
             }
             if(pos=="def") {
-                maxPuntsdef = max(maxPuntsdef, j.punts);
                 listdef.push_back(j);
-                Ndeftotal += 1;
             }
             if(pos=="mig") {
-                maxPuntsmig = max(maxPuntsmig, j.punts);
                 listmig.push_back(j);
-                Nmigtotal += 1;
             }
             if(pos=="dav") {
-                maxPuntsdav = max(maxPuntsdav, j.punts);
                 listdav.push_back(j);
-                Ndavtotal += 1;
             }
         }
     }
@@ -208,7 +235,7 @@ void llegir_jugadors(ifstream& dades_jugadors,
     std::sort(listdef.begin(), listdef.end(), ordre3);
     std::sort(listmig.begin(), listmig.end(), ordre3);
     std::sort(listdav.begin(), listdav.end(), ordre3);
-
+    return;
 }
 
 int construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, int T){
@@ -217,18 +244,18 @@ int construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, int T
     for (int i = 0; i < jugadors.size(); ++i) {
         jugadors_no_usats[i] = jugadors[i];
     }*/
-    for(uint i=0; i<jugadors.size() and Npor + Ndef + Nmig + Ndav != 0; i++){
+    for(uint i=0; (i<jugadors.size()) and (Npor + Ndef + Nmig + Ndav != 0); i++){
         //sempre tindrem que jugadors[i].preu <= J
         Jugador j = jugadors[i];
         
         if(j.preu <= preu_restant){
-            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); equip.push_back(j); Npor -= 1;}
-            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); equip.push_back(j); Ndef -= 1;}
-            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); equip.push_back(j); Nmig -= 1;}
-            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); equip.push_back(j); Ndav -= 1;}            
-            preu_restant -= j.preu;
+            if(j.pos=="por" and Npor>0){ E.afegir_jugador(j); equip.push_back(j); Npor -= 1;preu_restant -= j.preu;}
+            if(j.pos=="def" and Ndef>0){ E.afegir_jugador(j); equip.push_back(j); Ndef -= 1;preu_restant -= j.preu;}
+            if(j.pos=="mig" and Nmig>0){ E.afegir_jugador(j); equip.push_back(j); Nmig -= 1;preu_restant -= j.preu;}
+            if(j.pos=="dav" and Ndav>0){ E.afegir_jugador(j); equip.push_back(j); Ndav -= 1;preu_restant -= j.preu;}            
         }
     }
+    write_sol_cout(E);
     return preu_restant;
 }
 
@@ -280,8 +307,9 @@ Equip buscar_vei(int k, Jugador j, vector<Jugador>& equip2, Equip s2, int preu_r
 
 void simulated_annealing(Equip& E, vector<Jugador>& listdav,  vector<Jugador>& listdef, 
                              vector<Jugador>& listmig,  vector<Jugador>& listpor, int preu_restant,
-                             ofstream& fitxer_sortida, auto start){
+                             string fitxer_sortida, auto start){
     Equip s = E;
+
     float t = 1;
     int k = 1;
     int n = equip.size();
@@ -296,7 +324,10 @@ void simulated_annealing(Equip& E, vector<Jugador>& listdav,  vector<Jugador>& l
         int fs = s.punts;
         int fs2 = s2.punts;
 
-        if (s.punts > millors_punts) {write_sol(fitxer_sortida, E, start); millors_punts = s.punts;}
+        if (s.punts > millors_punts) {
+            write_sol_cout(fitxer_sortida, E, start);
+            millors_punts = s.punts;
+        }
         if (s2.punts > s.punts) {
             s = s2;
             equip = equip2;
@@ -308,11 +339,10 @@ void simulated_annealing(Equip& E, vector<Jugador>& listdav,  vector<Jugador>& l
         k = k+1;
         t = 1/k;
     }
-
 };
 
 void mh(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, int T,
-            ofstream& fitxer_sortida, auto start){
+            string fitxer_sortida, auto start){
     
     while(true){
         //construïr solució inicial :
@@ -331,16 +361,15 @@ int main(int argc, char** argv){
     auto start = std::chrono::system_clock::now();
 
     ifstream dades_jugadors(argv[1]);
-    ofstream fitxer_sortida(argv[2]);
-    ifstream plantilla(argv[3]);
+    ifstream plantilla(argv[2]);
+    string fitxer_sortida(argv[3]);
     int Ndef, Nmig, Ndav, T, J;
 
     plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
     plantilla.close();
     int Npor = 1;
 
-    llegir_jugadors(dades_jugadors, listpor, listdef, listmig, listdav, J);
-    Equip E = Equip(Ndef, Nmig, Ndav);
-
+    llegir_jugadors(dades_jugadors, J);
+    Equip E = Equip(0, 0, 0);
     mh(E, Npor, Ndef, Nmig, Ndav, T, fitxer_sortida, start);
 }
