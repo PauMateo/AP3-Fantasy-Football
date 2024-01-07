@@ -29,8 +29,7 @@ class Jugador {
 };
 
 vector<Jugador> listpor, listdef, listmig, listdav;  //ordenats per ratio greedy
-vector<Jugador> listpor_preu, listdef_preu, listmig_preu, listdav_preu; //ordenats per preu
-vector<bool> Upor, Udef, Umig, Udav;
+vector<bool> Upor, Udef, Umig, Udav;  //llistes dels jugadors que ja hem fet servir
 vector<Jugador> jugadors;
 int millors_punts = 0;
 int Ndef, Nmig, Ndav, T, J;
@@ -38,8 +37,8 @@ int Npor = 1;
 
 class Equip {
     public:
-        int por;         //índex a la llista listpor del porter
-        vector<int> def; //índexs dels defenses a la llista listdef
+        int por;         //índex a la llista listpor; listpor[por] és el porter de l'equip
+        vector<int> def; //índexs dels defenses a la llista listdef; els defenses son listdef[def[i]]
         vector<int> mig; //etc
         vector<int> dav;
         int punts;
@@ -49,7 +48,7 @@ class Equip {
             por(0), def(vector<int>(Ndef)), mig(vector<int>(Nmig)),
             dav(vector<int>(Ndav)), punts(0), preu(0){}
 
-        Equip(const Equip& E):
+        Equip(const Equip& E):  //copy constructor
             por(E.por), def(E.def), mig(E.mig), dav(E.dav), punts(E.punts), preu(E.preu){}
 
         void afegir_jugador(Jugador j, int i_j){
@@ -62,8 +61,12 @@ class Equip {
         }
 
         void canviar_jugador(int iold, Jugador jnew, int inew){
-            //canvia el jugador jnew pel jugador de la posició corresponent 
-            //que es troba a l'índex i dins del vector de l'equip 
+            //jnew: jugador nou que posem a l'equip
+            //iold: index del jugador que traiem de l'equip; és a dir, si 
+            //      el jugador que estem posant nou és defensa, aleshores 
+            //      el canviem pel jugador this.def[iold]
+            //inew: index d'on es troba el jugador jnew al vector de jugadors 
+            //      de la seva posició; per exemple, listdef[inew] = jnew 
             Jugador j1;
             if(jnew.pos == "por"){ 
                 j1 = listpor[por];
@@ -87,14 +90,6 @@ class Equip {
             preu += jnew.preu;
         }
 };
-
-
-
-bool ordre_preu(Jugador j1, Jugador j2){
-    if(j1.preu == 0) return false;
-    if(j2.preu == 0) return true;
-    return (j1.preu) > (j2.preu);
-}
 
 
 bool ordre_greedy(Jugador j1, Jugador j2){
@@ -170,6 +165,8 @@ void write_sol_cout(string sortida, Equip E, auto start){
 
 
 void llegir_jugadors(ifstream& dades_jugadors){
+    // llegeix les dades dels jugadors i els guarda als vector
+    // listpor, listdef... Ordena tals vectors amb la funció ordre_greedy().
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
@@ -188,29 +185,21 @@ void llegir_jugadors(ifstream& dades_jugadors){
 
 
         if ((preu <= J) and ( (preu > 0 and punts > 0) or (punts==0 and preu==0))){
-            jugadors.push_back(j);
 
             if(pos=="por") {
-                cout << nom << "   " << punts << "   " << preu << endl;
                 listpor.push_back(j);
-                listpor_preu.push_back(j);
             }
             if(pos=="def") {
                 listdef.push_back(j);
-                listdef_preu.push_back(j);
             }
             if(pos=="mig") {
                 listmig.push_back(j);
-                listmig_preu.push_back(j);
             }
             if(pos=="dav") {
                 listdav.push_back(j);
-                listdav_preu.push_back(j);
             }
         }
     }
-
-    std::sort(jugadors.begin(), jugadors.end(), ordre_greedy);
 
     std::sort(listpor.begin(), listpor.end(), ordre_greedy);
     std::sort(listdef.begin(), listdef.end(), ordre_greedy);
@@ -221,6 +210,7 @@ void llegir_jugadors(ifstream& dades_jugadors){
 }
 
 void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
+    // construeix una solució inicial per al simulated annealing
     int preu_restant = T;
 
     Upor = vector<bool>(listpor.size(), false);
@@ -263,6 +253,10 @@ void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
 
 
 int tria_jugador(const Equip& s1, Jugador& old){
+    // funció que escull un jugador del nostre equip a l'atzar per tal
+    // de treure'l i intercanviar-lo amb un altre jugador.
+    // Retorna l'índex on es troba el jugador dins del vector de l'equip
+    // i guarda el jugador a la variable old.
     int m = 1 + (rand() % 11); //pos=0 -> triem un porter
                                //pos=1 -> triem un defensa
                                //...
@@ -286,8 +280,10 @@ int tria_jugador(const Equip& s1, Jugador& old){
 }
 
 int tria_vei(const Equip& s1, Equip& s2, const Jugador& old, const int i_old ){
-    //busquem un vei de s1
-    //s2 serà el vei de s1
+    // Funció que busca una solució veïna de s1. El jugador old és el que traurem
+    // de l'equip s1, i buscarem un nou jugador a l'atzar per a substituir-lo.
+    // Returna -1 si no aconseguim trobar cap jugador o, en cas de trobar-lo, 
+    // retorna l'index d'on es troba el nou jugador a les llistres globals (listpor...).
     int i_new=0;
     int preu_restant = T - s1.preu;
     s2 = Equip(s1);
@@ -355,16 +351,16 @@ int tria_vei(const Equip& s1, Equip& s2, const Jugador& old, const int i_old ){
 }
 
 void accepta_vei(Equip& s1, const Equip& s2, const Jugador& jold, int i_old, int i_new){
-    
-    int old_2=0;
+    // actualitzem la solució s1 (s1 = s2) i modifiquem els vector
+    // Upor, Udef... en funció del jugador que hem tret i del que hem agafat.
+
     if(jold.pos == "por"){
         Upor[s1.por] = false;
         Upor[i_new] = true;
     }
     else if(jold.pos == "def"){
         Udef[s1.def[i_old]] = false;
-        old_2 = s1.def[i_old];
-        //cout << Udef[s1.def[i_old]] << endl << endl;
+
         Udef[i_new] = true;
     }
     else if(jold.pos == "mig"){
@@ -377,18 +373,11 @@ void accepta_vei(Equip& s1, const Equip& s2, const Jugador& jold, int i_old, int
     }
 
     s1 = Equip(s2);
-    //-------------------------
-    /*
-    cout << "iold= " << i_old << "real_iold= "<<old_2<< "   inew= "<< i_new << endl;
-
-    for(int i=0; i<Udef.size(); ++i){
-        cout << Udef[i] << " ";
-    }
-    cout << endl; */
 }
 
 
 float prob(const Equip& s1, const Equip& s2, int t){
+    //distribució de Boltzmann
     if(t < 0.000001) {
         return 0.0;
     }
@@ -399,52 +388,48 @@ float prob(const Equip& s1, const Equip& s2, int t){
 void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
     Equip s1 = Equip(E);
     Equip s2 = Equip(E);
-    float t = 100.0;
-    int k = 1;
-    float a = 0.97;
+    float t = 100.0;   //temperatura inicial
+    float a = 0.97;    //factor geomètric   
     int iteracions_sense_canvi = 0;  //les iteracions que portem sense canviar de solució 
 
     if (s1.punts > millors_punts) {
-        cout << "**********************************************************************************" << endl;
-        write_sol_cout(fitxer_sortida, s2, start);
+        write_sol(fitxer_sortida, s2, start);
         millors_punts = s1.punts;
-        cout << "**********************************************************************************" << endl;
     }
+
+    //generador de nombres aleatoris entre [0, 1):
     random_device rd;
     mt19937 gen(rd());
     uniform_real_distribution<double> dis(0.0, 1.0);
     double randomValue;
+
     while(iteracions_sense_canvi < 30){ // quan portem moltes iteracions amb la mateixa solució, 
                                         // considerem que hem arribat a un màxim local i acabem
                                         // el simulated annealing
 
         
-        randomValue = dis(gen);
+        
 
         //busquem veí de s1:
         Jugador jold, jnew;
         int i_old, i_new;
 
-        i_old = tria_jugador(s1, jold);
-        i_new = tria_vei(s1, s2, jold, i_old);
+        i_old = tria_jugador(s1, jold);  //triem quin jugador traurem de l'equip
+        i_new = tria_vei(s1, s2, jold, i_old); //triem quin jugador agafarem
         
-        if(i_new == -1) continue;
-        
+        if(i_new == -1) continue;  //no hem pogut trobar cap veí
 
-        //write_sol_cout(" ", s2, start);
         if (s2.punts > s1.punts) {
             if (s2.punts > millors_punts) {
-                cout << "*******************************************************" << endl;
-                write_sol_cout(fitxer_sortida, s2, start);
+                write_sol(fitxer_sortida, s2, start);
                 millors_punts = s2.punts;
-                cout << "*******************************************************" << endl;
             }
-            accepta_vei(s1, s2, jold, i_old, i_new);
+            accepta_vei(s1, s2, jold, i_old, i_new);  //actualitzem s1 i els vectors Upor, Udef...
             iteracions_sense_canvi = 0;
         }
         else{
             double p = prob(s1, s2, t);
-            //cout << " ---------------> t= " << t<<"   p="<<p << endl;
+            randomValue = dis(gen);
             if (randomValue < p) {
                 accepta_vei(s1, s2, jold, i_old, i_new); 
                 iteracions_sense_canvi = 0;
@@ -452,13 +437,11 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
             else ++iteracions_sense_canvi;
         }
 
-        k = k+1;
         t = a*t;
     }
 };
 
 void grasp(string fitxer_sortida, auto start){
-    
     while(true){
         //construïr solució inicial :
         Equip E = Equip(0, 0, 0);
@@ -484,9 +467,6 @@ int main(int argc, char** argv){
     plantilla >> Ndef >> Nmig >> Ndav >> T >> J;
     plantilla.close();
 
-    ofstream fs(fitxer_sortida);
-    fs << "hola" << endl;
-    fs.close();
     llegir_jugadors(dades_jugadors);
     grasp(fitxer_sortida, start);
 }
