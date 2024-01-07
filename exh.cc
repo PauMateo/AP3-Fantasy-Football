@@ -85,36 +85,6 @@ void write_sol(string fsname, Equip E, auto start){
     fs.close();
 }
 
-void write_sol_cout(string fsname, Equip E, auto start){
-
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    cout <<fixed<<setprecision(1)<< duration.count() << endl;
-
-    cout << "POR: " << E.por << endl;
-    
-    bool first = true;
-    for (string nom : E.def){
-        if(first){first=false;cout<<"DEF: "<<nom;}
-        else cout<<";"<<nom;
-    }
-    cout<<endl;
-    first = true;
-    for (string nom : E.mig){
-        if(first){first=false;cout<<"MIG: "<<nom;}
-        else cout<<";"<<nom;
-    }
-    cout<<endl;
-    first = true;
-    for (string nom : E.dav){
-        if(first){first=false;cout<<"DAV: "<<nom;}
-        else cout<<";"<<nom;
-    }
-    cout<<endl;
-    cout << "Punts: " << E.punts << endl;
-    cout << "Preu: " << E.preu << endl;
-}
-
 
 void llegir_jugadors(ifstream& dades_jugadors){
     string nom, pos, club, aux2;
@@ -208,15 +178,13 @@ bool prune(int porres, int defres, int migres, int davres,
 
 
 /*
-
+Funció recursiva que fa el backtracking
 tots aquests índexs (idxpor, kpor, ...) són només per fer correctament les diferents 
 combinacions de conjunts de jugadors (permutacions sense ordre i sense repeticions).
 idxdef : nombre de defenses que ja hem agafat per l'equip; és a dir, dins del 
          vector on tenim els defenses, és l'índex on posarem el següent defensa
 kdef   : dins del vector on tenim tots els defenses de la base de dades (listdef)
          és la posició a partir de la cual podem agafar defenses per l'equip
-
-
 */
 void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
                 int kpor, int kdef, int kmig, int kdav,
@@ -232,7 +200,7 @@ void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
     if(porres + defres + migres + davres == 0){
         if(E.punts > millors_punts){
             millors_punts = E.punts;
-            return write_sol_cout(fitxer_sortida, E, start);
+            return write_sol(fitxer_sortida, E, start);
         }
         return; //en cas que no millorem punts
     }
