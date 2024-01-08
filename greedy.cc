@@ -28,7 +28,7 @@ class Entrada {
 class Jugador {
     public:
         string nom;
-        string pos;
+        string pos; //por, def, mig, dav
         int    preu;
         string club;
         int    punts;
@@ -40,10 +40,10 @@ class Jugador {
 
 class Equip {
     public:
-        string por;
-        vector<string> def;
-        vector<string> mig;
-        vector<string> dav;
+        string por; //nom del porter
+        vector<string> def; //llista amb els noms dels defenses
+        vector<string> mig; //llista amb els noms dels migcampistes
+        vector<string> dav; //llista amb els noms dels davanters
         int punts;
         int preu;
 
@@ -65,6 +65,7 @@ class Equip {
 
 
 void write_sol(ofstream& fs, Equip E, auto start){
+    //Escriu la solució final al fitxer de sortida fs.
 
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<double> duration = end - start;
@@ -96,6 +97,7 @@ void write_sol(ofstream& fs, Equip E, auto start){
 
 
 bool ordre(Jugador j1, Jugador j2){
+    //Ordena segons la relació punts^3/preu per cada jugador.
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
     return (pow(j1.punts, 3)/ j1.preu) > (pow(j2.punts, 3) / j2.preu);
@@ -105,6 +107,9 @@ bool ordre(Jugador j1, Jugador j2){
 void llegir_jugadors(ifstream& dades_jugadors,
                      vector<Jugador>& jugadors,
                      int J){
+    //Llegeix els jugadors del fitxer 'bench' d'entrada.
+    //I defineix la classe Jugador per cadascun d'ells.
+
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
@@ -129,6 +134,8 @@ void llegir_jugadors(ifstream& dades_jugadors,
 
 
 void greedy(Entrada entrada, ifstream& dades_jugadors, ofstream& fitxer_sortida, auto start){
+    //Aplica l'algorisme greedy per trobar la combinació d'equip més òptima...
+    //...afegint els jugadors a la classe Equip.
 
     int Npor, Ndef, Nmig, Ndav, T, J;
     Npor = entrada.Npor;
