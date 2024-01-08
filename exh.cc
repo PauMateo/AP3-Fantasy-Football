@@ -13,7 +13,7 @@ using namespace std;
 class Jugador {
     public:
         string nom;
-        string pos;
+        string pos; //por, def, mig, dav
         int    preu;
         string club;
         int    punts;
@@ -26,10 +26,10 @@ class Jugador {
 
 class Equip {
     public:
-        string por;
-        vector<string> def;
-        vector<string> mig;
-        vector<string> dav;
+        string por; //nom del porter
+        vector<string> def; //llista amb els noms dels defenses
+        vector<string> mig; //llista amb els noms dels migcampistes
+        vector<string> dav; //llista amb els noms dels davanters
         int punts;
         int preu;
 
@@ -87,6 +87,8 @@ void write_sol(string fsname, Equip E, auto start){
 
 
 void llegir_jugadors(ifstream& dades_jugadors){
+    // Llegeix les dades dels jugadors i els guarda als vectors
+    // listpor, listdef... Ordena tals vectors amb la funció ordre0 (per punts de jugadors).
     string nom, pos, club, aux2;
     int preu, punts;
     char aux;
@@ -189,7 +191,8 @@ kdef   : dins del vector on tenim tots els defenses de la base de dades (listdef
 void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
                 int kpor, int kdef, int kmig, int kdav,
                 int preu_restant, string fitxer_sortida, auto start){
-    
+    //Aplica l'algorisme de cerca exhaustiva per a trobar la combinació d'equip més òptima.
+
     int porres = Npor - idxpor; //nombre de porters que ens queden per posar
     int defres = Ndef - idxdef; //etc
     int migres = Nmig - idxmig;
@@ -259,7 +262,7 @@ void exh_search(Equip& E, int idxpor, int idxdef, int idxmig, int idxdav,
 }
 
 
-void exh_search(string fitxer_sortida, auto start){
+void search(string fitxer_sortida, auto start){
     E = Equip(Ndef, Nmig, Ndav);
     return exh_search(E, 0, 0, 0, 0, 0, 0, 0, 0, T, fitxer_sortida, start);
 }
@@ -280,5 +283,5 @@ int main(int argc, char** argv){
     plantilla.close();
 
     llegir_jugadors(dades_jugadors);
-    exh_search(argv[3], start);
+    search(argv[3], start);
 }
