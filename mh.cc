@@ -209,7 +209,7 @@ void llegir_jugadors(ifstream& dades_jugadors){
     return;
 }
 
-void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool first_call){
+void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool not_random){
     // construeix una solució inicial per al simulated annealing
 
     random_device rd;
@@ -219,8 +219,8 @@ void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool
     double p;
     double randomVal;
 
-    if(first_call) p = 0;
-    else p = 0.3;
+    if(not_random) p = 0;  //mai saltarem
+    else p = 0.2;
 
     int preu_restant = T;
 
@@ -436,7 +436,7 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
 
         if (s2.punts > s1.punts) {
             if (s2.punts > millors_punts) {
-                write_sol(fitxer_sortida, s2, start);
+                write_sol_cout(fitxer_sortida, s2, start);
                 millors_punts = s2.punts;
             }
             accepta_vei(s1, s2, jold, i_old, i_new);  //actualitzem s1 i els vectors Upor, Udef...
@@ -457,16 +457,16 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
 };
 
 void grasp(string fitxer_sortida, auto start){
-    
-    Equip E = Equip(0, 0, 0);
-    construir_sol_greedy(E, Npor, Ndef, Nmig, Ndav, true);
+    int i=0;
     while(true){
+        //solució inicial:
+        Equip E = Equip(0, 0, 0);
+        randomized_greedy(E, Npor, Ndef, Nmig, Ndav, (i==0));
         //simulated annealing
         simulated_annealing(E, fitxer_sortida, start);
-        //nova solució:
-        Equip E = Equip(0, 0, 0);
-        construir_sol_greedy(E, Npor, Ndef, Nmig, Ndav, false);
-        //write_sol_cout(fitxer_sortida, E, start);
+
+        i = (i+1) % 5;  // cada 5 iteracions agafem una solució inicial 
+                         // greedy NO RANDOMITZADA
     }
 }
 
