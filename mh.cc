@@ -220,7 +220,7 @@ void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool no
     double randomVal;
 
     if(not_random) p = 0;  //mai saltarem
-    else p = 0.2;
+    else p = 0.1;
 
     int preu_restant = T;
 
@@ -436,7 +436,7 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
 
         if (s2.punts > s1.punts) {
             if (s2.punts > millors_punts) {
-                write_sol_cout(fitxer_sortida, s2, start);
+                write_sol(fitxer_sortida, s2, start);
                 millors_punts = s2.punts;
             }
             accepta_vei(s1, s2, jold, i_old, i_new);  //actualitzem s1 i els vectors Upor, Udef...
