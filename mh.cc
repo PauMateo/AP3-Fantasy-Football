@@ -209,16 +209,30 @@ void llegir_jugadors(ifstream& dades_jugadors){
     return;
 }
 
-void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
+void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool first_call){
     // construeix una solució inicial per al simulated annealing
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<double> dis(0.0, 1.0);
+    
+    double p;
+    double randomVal;
+
+    if(first_call) p = 0;
+    else p = 0.3;
+
     int preu_restant = T;
 
     Upor = vector<bool>(listpor.size(), false);
     Udef = vector<bool>(listdef.size(), false);
     Umig = vector<bool>(listmig.size(), false);
     Udav = vector<bool>(listdav.size(), false);
+
     for(uint i=0; i<listpor.size() and Npor>0; ++i){
+        randomVal = dis(gen);
         if(listpor[i].preu<=preu_restant){
+            if(p > randomVal and Npor > listpor.size()-1) continue;
             preu_restant -= listpor[i].preu;
             E.afegir_jugador(listpor[i], i);
             Upor[i] = true;
@@ -226,7 +240,9 @@ void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
     }   }
 
     for(uint i=0; i<listdef.size() and Ndef>0; ++i){
+        randomVal = dis(gen);
         if(listdef[i].preu<=preu_restant){
+            if(p > randomVal and Ndef > listdef.size()-1) continue;
             Ndef--;
             preu_restant -= listdef[i].preu;
             E.afegir_jugador(listdef[i], i);
@@ -235,6 +251,7 @@ void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
 
     for(uint i=0; i<listmig.size() and Nmig>0; ++i){
         if(listmig[i].preu<=preu_restant){
+            if(p > dis(gen) and Nmig > listmig.size()-1) continue;
             Nmig--;
             preu_restant -= listmig[i].preu;
             E.afegir_jugador(listmig[i], i);
@@ -243,6 +260,7 @@ void construir_sol_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav){
 
     for(uint i=0; i<listdav.size() and Ndav>0; ++i){
         if(listdav[i].preu<=preu_restant){
+            if(p > dis(gen) and Ndav > listdav.size()-1) continue;
             Ndav--;
             preu_restant -= listdav[i].preu;
             E.afegir_jugador(listdav[i], i);
@@ -407,9 +425,6 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
                                         // considerem que hem arribat a un màxim local i acabem
                                         // el simulated annealing
 
-        
-        
-
         //busquem veí de s1:
         Jugador jold, jnew;
         int i_old, i_new;
@@ -442,13 +457,16 @@ void simulated_annealing(Equip& E, string fitxer_sortida, auto start){
 };
 
 void grasp(string fitxer_sortida, auto start){
+    
+    Equip E = Equip(0, 0, 0);
+    construir_sol_greedy(E, Npor, Ndef, Nmig, Ndav, true);
     while(true){
-        //construïr solució inicial :
-        Equip E = Equip(0, 0, 0);
-        construir_sol_greedy(E, Npor, Ndef, Nmig, Ndav);
-
         //simulated annealing
         simulated_annealing(E, fitxer_sortida, start);
+        //nova solució:
+        Equip E = Equip(0, 0, 0);
+        construir_sol_greedy(E, Npor, Ndef, Nmig, Ndav, false);
+        //write_sol_cout(fitxer_sortida, E, start);
     }
 }
 
