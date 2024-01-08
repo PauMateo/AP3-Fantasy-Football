@@ -93,6 +93,8 @@ class Equip {
 
 
 bool ordre_greedy(Jugador j1, Jugador j2){
+    //Ordena segons la relació punts^3/preu per cada jugador.
+
     if(j1.punts == 0) return false;
     if(j2.punts == 0) return true;
     return (pow(j1.punts, 3)/ pow(j1.preu, 1)) > (pow(j2.punts, 3) / pow(j2.preu, 1));
@@ -100,6 +102,8 @@ bool ordre_greedy(Jugador j1, Jugador j2){
 
 
 void write_sol(string sortida, Equip E, auto start){
+    //Escriu la solució final al fitxer de sortida fs.
+
     ofstream fs(sortida);
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
@@ -130,39 +134,6 @@ void write_sol(string sortida, Equip E, auto start){
     fs << "Preu: " << E.preu << endl;
     fs.close();
 }   
-
-void write_sol_cout(string sortida, Equip E, auto start){
-    ofstream fs(sortida);
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<float,std::milli> duration = end - start;
-
-    cout <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
-
-    cout << "POR: " << listpor[E.por].nom << endl;
-    
-    bool first = true;
-    for (int i : E.def){
-        if(first){first=false;cout<<"DEF: "<<listdef[i].nom;}
-        else cout<<";"<<listdef[i].nom;
-    }
-    cout<<endl;
-    first = true;
-    for (int i : E.mig){
-        if(first){first=false;cout<<"MIG: "<<listmig[i].nom;}
-        else cout<<";"<<listmig[i].nom;
-    }
-    cout<<endl;
-    first = true;
-    for (int i : E.dav){
-        if(first){first=false;cout<<"DAV: "<<listdav[i].nom;}
-        else cout<<";"<<listdav[i].nom;
-    }
-    cout<<endl;
-    cout << "Punts: " << E.punts << endl;
-    cout << "Preu: " << E.preu << endl;
-    fs.close();
-}
-
 
 void llegir_jugadors(ifstream& dades_jugadors){
     // llegeix les dades dels jugadors i els guarda als vector
@@ -232,7 +203,7 @@ void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool no
     for(uint i=0; i<listpor.size() and Npor>0; ++i){
         randomVal = dis(gen);
         if(listpor[i].preu<=preu_restant){
-            if(p > randomVal and Npor > listpor.size()-1) continue;
+            if(p > randomVal and Npor > int(listpor.size()-1)) continue;
             preu_restant -= listpor[i].preu;
             E.afegir_jugador(listpor[i], i);
             Upor[i] = true;
@@ -242,7 +213,7 @@ void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool no
     for(uint i=0; i<listdef.size() and Ndef>0; ++i){
         randomVal = dis(gen);
         if(listdef[i].preu<=preu_restant){
-            if(p > randomVal and Ndef > listdef.size()-1) continue;
+            if(p > randomVal and Ndef > int(listdef.size()-1)) continue;
             Ndef--;
             preu_restant -= listdef[i].preu;
             E.afegir_jugador(listdef[i], i);
@@ -251,7 +222,7 @@ void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool no
 
     for(uint i=0; i<listmig.size() and Nmig>0; ++i){
         if(listmig[i].preu<=preu_restant){
-            if(p > dis(gen) and Nmig > listmig.size()-1) continue;
+            if(p > dis(gen) and Nmig > int(listmig.size()-1)) continue;
             Nmig--;
             preu_restant -= listmig[i].preu;
             E.afegir_jugador(listmig[i], i);
@@ -260,7 +231,7 @@ void randomized_greedy(Equip& E, int Npor, int Ndef, int Nmig, int Ndav, bool no
 
     for(uint i=0; i<listdav.size() and Ndav>0; ++i){
         if(listdav[i].preu<=preu_restant){
-            if(p > dis(gen) and Ndav > listdav.size()-1) continue;
+            if(p > dis(gen) and Ndav > int(listdav.size()-1)) continue;
             Ndav--;
             preu_restant -= listdav[i].preu;
             E.afegir_jugador(listdav[i], i);
