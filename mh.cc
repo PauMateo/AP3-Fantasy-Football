@@ -108,7 +108,7 @@ void write_sol(string sortida, Equip E, auto start){
     auto end = std::chrono::system_clock::now();
     std::chrono::duration<float,std::milli> duration = end - start;
 
-    fs <<setprecision(1)<< duration.count() / 1000 << fixed << endl;
+    fs <<fixed<<setprecision(1)<< duration.count() / 1000 << endl;
 
     fs << "POR: " << listpor[E.por].nom << endl;
     
